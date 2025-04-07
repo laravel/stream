@@ -1,0 +1,59 @@
+{
+  "name": "laravel-use-stream",
+  "version": "1.0.0",
+  "description": "The Laravel useStream hooks for React and Vue",
+  "keywords": [
+    "laravel",
+    "stream",
+    "use-stream",
+    "server-sent-events",
+    "sse",
+    "react",
+    "vue",
+    "hooks",
+    "composables"
+  ],
+  "author": "Tony Lea",
+  "license": "MIT",
+  "homepage": "https://github.com/laravel/stream#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/laravel/stream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/laravel/stream/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts"
+    },
+    "./vue": {
+      "import": "./dist/vue/index.js",
+      "types": "./dist/vue/index.d.ts"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "test": "echo \"No tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0|19.0.0",
+    "vue": "^3.0.0"
+  }
+}
