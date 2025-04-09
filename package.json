@@ -43,7 +43,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",
