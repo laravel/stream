@@ -35,7 +35,7 @@ export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_N
     });
     // Stable callback to update the stream state
     const updateStreamState = useCallback((updates) => {
-        setStreamState(prev => ({
+        setStreamState((prev) => ({
             ...prev,
             ...updates
         }));
