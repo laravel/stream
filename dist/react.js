@@ -1,103 +1,120 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+// Default values for optional parameters
+const DEFAULT_EVENT_NAME = 'update';
+const DEFAULT_END_SIGNAL = '</stream>';
+const DEFAULT_SEPARATOR = ' ';
 /**
  * Hook for handling server-sent events (SSE) streams
  *
  * @param url - The URL to connect to for the EventSource
+ * @param callback - Optional function to be called when an event is received
+ * @param onComplete - Optional callback to be executed when the stream ends
  * @param eventName - Optional custom event name (defaults to 'update')
  * @param endSignal - Optional custom end signal (defaults to '</stream>')
  * @param separator - Optional separator for joining message parts (defaults to ' ')
- * @param callback - Optional function to be called when an event is received
- * @param onComplete - Optional callback to be executed when the stream ends
  * @returns StreamResult object containing the accumulated message, onMessage callback, and stream status
  */
-export function useStream(url, eventName = 'update', endSignal = '</stream>', separator = ' ', callback, onComplete) {
+export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_NAME, endSignal = DEFAULT_END_SIGNAL, separator = DEFAULT_SEPARATOR) {
+    // Refs for managing callbacks and connection state
     const sourceRef = useRef(null);
     const messagePartsRef = useRef([]);
     const callbackRef = useRef(callback);
     const onCompleteRef = useRef(onComplete);
+    const onMessageCallbackRef = useRef(null);
     // Update refs when callbacks change
     useEffect(() => {
         callbackRef.current = callback;
         onCompleteRef.current = onComplete;
     }, [callback, onComplete]);
-    const [streamResult, setStreamResult] = useState({
+    // Initialize stream state
+    const [streamState, setStreamState] = useState({
         message: '',
         messageParts: [],
         streamComplete: false,
         error: null
     });
-    // Store the onMessage callback in a ref to avoid dependency issues
-    const onMessageCallbackRef = useRef(null);
-    // Stable callback to update the stream result
-    const updateStreamResult = useCallback((updates) => {
-        setStreamResult(prev => ({
+    // Stable callback to update the stream state
+    const updateStreamState = useCallback((updates) => {
+        setStreamState(prev => ({
             ...prev,
             ...updates
         }));
     }, []);
-    useEffect(() => {
-        // Reset message parts when creating a new connection
+    // Function to reset stream state
+    const resetStreamState = useCallback(() => {
         messagePartsRef.current = [];
-        // Reset the stream result
-        updateStreamResult({
+        updateStreamState({
             message: '',
             messageParts: [],
             streamComplete: false,
             error: null
         });
-        // Create a new EventSource
-        const source = new EventSource(url);
-        sourceRef.current = source;
-        // Add event listener for the specified event name
-        source.addEventListener(eventName, (event) => {
-            // Check if this is the end signal
-            if (event.data === endSignal || event.data === `data: ${endSignal}`) {
-                // Close the connection
-                source.close();
-                // Update the stream result to indicate completion
-                updateStreamResult({ streamComplete: true });
-                // Call the onComplete callback if provided
-                if (onCompleteRef.current) {
-                    onCompleteRef.current(event);
-                }
-                return;
-            }
-            // Clean the data by removing 'data: ' prefix if present
-            const cleanData = event.data.startsWith('data: ')
-                ? event.data.substring(6) // Remove 'data: ' prefix
-                : event.data;
-            // Add the cleaned message part to our array
-            messagePartsRef.current.push(cleanData);
-            // Update the stream result with the new message
-            updateStreamResult({
-                message: messagePartsRef.current.join(separator),
-                messageParts: [...messagePartsRef.current]
-            });
-            // Call the onMessage callback with the new chunk if it exists
-            if (onMessageCallbackRef.current) {
-                onMessageCallbackRef.current(cleanData);
-            }
-            // Call the callback with the event data if provided
-            if (callbackRef.current) {
-                callbackRef.current(event);
-            }
-        });
-        // Error handling
-        source.onerror = (error) => {
-            console.error('EventSource error:', error);
-            updateStreamResult({ error: new Error('EventSource connection error') });
-            source.close();
-        };
-        // Cleanup function to close the connection when the component unmounts
-        return () => {
+    }, [updateStreamState]);
+    // Function to handle incoming messages
+    const handleMessage = useCallback((event) => {
+        // Check if this is the end signal
+        if (event.data === endSignal || event.data === `data: ${endSignal}`) {
+            // Close the connection
             if (sourceRef.current) {
                 sourceRef.current.close();
             }
+            // Update the stream state to indicate completion
+            updateStreamState({ streamComplete: true });
+            // Call the onComplete callback if provided
+            if (onCompleteRef.current) {
+                onCompleteRef.current(event);
+            }
+            return;
+        }
+        // Clean the data by removing 'data: ' prefix if present
+        const cleanData = event.data.startsWith('data: ')
+            ? event.data.substring(6) // Remove 'data: ' prefix
+            : event.data;
+        // Add the cleaned message part to our array
+        messagePartsRef.current.push(cleanData);
+        // Update the stream state with the new message
+        updateStreamState({
+            message: messagePartsRef.current.join(separator),
+            messageParts: [...messagePartsRef.current]
+        });
+        // Call the onMessage callback with the event data
+        if (onMessageCallbackRef.current) {
+            onMessageCallbackRef.current(event);
+        }
+        // Call the callback with the event data if provided
+        if (callbackRef.current) {
+            callbackRef.current(event);
+        }
+    }, [endSignal, separator, updateStreamState]);
+    // Function to handle errors
+    const handleError = useCallback((error) => {
+        console.error('EventSource error:', error);
+        updateStreamState({ error: new Error('EventSource connection error') });
+        if (sourceRef.current) {
+            sourceRef.current.close();
+        }
+    }, [updateStreamState]);
+    // Set up and tear down the EventSource connection
+    useEffect(() => {
+        // Reset state when creating a new connection
+        resetStreamState();
+        // Create a new EventSource
+        const source = new EventSource(url);
+        sourceRef.current = source;
+        // Add event listeners
+        source.addEventListener(eventName, handleMessage);
+        source.onerror = handleError;
+        // Cleanup function to close the connection when the component unmounts
+        // or when dependencies change
+        return () => {
+            source.removeEventListener(eventName, handleMessage);
+            source.close();
+            sourceRef.current = null;
         };
-    }, [url, eventName, endSignal, separator, updateStreamResult]); // Removed callback and onComplete from dependencies
+    }, [url, eventName, handleMessage, handleError, resetStreamState]);
     // Return the stream result with the onMessage function
     return {
-        ...streamResult,
+        ...streamState,
         onMessage: (callback) => {
             onMessageCallbackRef.current = callback;
         }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface StreamResult {
     message: string;        // The accumulated message
-    onMessage: (callback: (chunk: string) => void) => void; // Function to set callback for new chunks
+    onMessage: (callback: (event: MessageEvent) => void) => void; // Function to run when a message event is received
     messageParts: string[]; // Array of individual message parts
     streamComplete: boolean; // Whether the stream has completed
     error: Error | null;    // Any error that occurred
@@ -40,7 +40,7 @@ export function useStream(
     const messagePartsRef = useRef<string[]>([]);
     const callbackRef = useRef(callback);
     const onCompleteRef = useRef(onComplete);
-    const onMessageCallbackRef = useRef<((chunk: string) => void) | null>(null);
+    const onMessageCallbackRef = useRef<((event: MessageEvent) => void) | null>(null);
 
     // Update refs when callbacks change
     useEffect(() => {
@@ -109,9 +109,9 @@ export function useStream(
             messageParts: [...messagePartsRef.current]
         });
         
-        // Call the onMessage callback with the new chunk if it exists
+        // Call the onMessage callback with the event data
         if (onMessageCallbackRef.current) {
-            onMessageCallbackRef.current(cleanData);
+            onMessageCallbackRef.current(event);
         }
         
         // Call the callback with the event data if provided
@@ -155,7 +155,7 @@ export function useStream(
     // Return the stream result with the onMessage function
     return {
         ...streamState,
-        onMessage: (callback: (chunk: string) => void) => {
+        onMessage: (callback: (event: MessageEvent) => void) => {
             onMessageCallbackRef.current = callback;
         }
     };
