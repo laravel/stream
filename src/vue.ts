@@ -127,7 +127,7 @@ export function useStream(
   });
   
   // Watch for changes to the URL and reconnect if it changes
-  watch(() => url, (newUrl, oldUrl) => {
+  watch(() => url, (newUrl: string, oldUrl: string) => {
     if (newUrl !== oldUrl) {
       // Close the old connection
       if (source) {

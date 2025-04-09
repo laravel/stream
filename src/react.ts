@@ -58,7 +58,7 @@ export function useStream(
 
     // Stable callback to update the stream state
     const updateStreamState = useCallback((updates: Partial<StreamState>) => {
-        setStreamState(prev => ({
+        setStreamState((prev: StreamState) => ({
             ...prev,
             ...updates
         }));
