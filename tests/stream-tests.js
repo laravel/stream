@@ -5,12 +5,12 @@
  * of the useStream hook. It provides a consistent way to test both implementations
  * with the same assertions and test logic.
  * 
- * The file exports 7 test functions corresponding to the 7 core tests:
+ * The file exports 7 test functions corresponding to the 7 tests below:
  *   #1 assertInitialStreamState - Test initial state values
  *   #2 testProcessMessages - Test message processing
  *   #3 testStreamCompletion - Test stream completion
  *   #4 testErrorHandling - Test error handling
- *   #5 testOnMessageCallback - Test onMessage callback
+ *   #5 testOnMessageCallback - Test the onMessage callback
  *   #6 testCleanup - Test cleanup on unmount
  *   #7 testUrlChange - Test URL change reconnection
  */
@@ -19,7 +19,7 @@ import { expect, vi } from 'vitest';
 
 /**
  * #1 - Test initial state values
- * Asserts that a stream hook has the expected initial values
+ * Asserts that the useStream hook has the expected initial values
  * Works with both React and Vue implementations
  * 
  * @param {Object} result - The result object from renderHook or withSetup
@@ -59,9 +59,9 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
     // Render the hook
     const result = framework === 'react'
         ? renderFn(() => useStreamFn('/stream')).result
-        : renderFn(() => useStreamFn('/stream'))[0];
+        : renderFn(() => useStreamFn('/stream'))[0]; // withSetup for Vue returns array of [result, app]
 
-    // Get the event handler
+    // Get the event handler, mimicking second arg in eventSource.addEventListener(eventName, eventHandler);
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
     // Simulate first message
@@ -103,8 +103,6 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
         expect(result.message.value).toBe('Hello World');
         expect(result.messageParts.value).toEqual(['Hello', 'World']);
     }
-
-    return { result, mocks };
 }
 
 /**
@@ -118,26 +116,17 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
  */
 export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
     // Create mock EventSource
-    const mockAddEventListener = vi.fn();
-    const mockRemoveEventListener = vi.fn();
-    const mockClose = vi.fn();
-
-    // Override the global mock for this specific test
-    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-        addEventListener: mockAddEventListener,
-        removeEventListener: mockRemoveEventListener,
-        close: mockClose
-    })));
+    const mocks = global.createEventSourceMock();
 
     const onCompleteMock = vi.fn();
 
     // Render the hook
     const result = framework === 'react'
-        ? renderFn(() => useStreamFn('/stream', undefined, onCompleteMock)).result
-        : renderFn(() => useStreamFn('/stream', undefined, onCompleteMock))[0];
+        ? renderFn(() => useStreamFn('/stream', () => {}, onCompleteMock)).result
+        : renderFn(() => useStreamFn('/stream', () => {}, onCompleteMock))[0];
 
-    // Get the event handler function
-    const eventHandler = mockAddEventListener.mock.calls[0][1];
+    // Get the event handler, mimicking second arg in eventSource.addEventListener(eventName, eventHandler);
+    const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
     // Simulate end signal
     if (framework === 'react' && actFn) {
@@ -149,7 +138,6 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
     }
 
     // Check if stream complete state was updated correctly
-
     if ('current' in result) {
         // React style assertions
         expect(result.current.streamComplete).toBe(true);
@@ -158,10 +146,8 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
         expect(result.streamComplete.value).toBe(true);
     }
 
-    expect(mockClose).toHaveBeenCalled();
+    expect(mocks.close).toHaveBeenCalled();
     expect(onCompleteMock).toHaveBeenCalled();
-
-    return { result, mocks: { addEventListener: mockAddEventListener, close: mockClose } };
 }
 
 /**
@@ -201,8 +187,6 @@ export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
     }
 
     expect(mocks.close).toHaveBeenCalled();
-
-    return { result, errorHandler: mocks.errorHandler, mockClose: mocks.close };
 }
 
 /**
@@ -215,15 +199,8 @@ export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
-    // Mock EventSource implementation
-    const mockAddEventListener = vi.fn();
-
-    // Override the global mock for this specific test
-    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-        addEventListener: mockAddEventListener,
-        removeEventListener: vi.fn(),
-        close: vi.fn()
-    })));
+    // Create mock EventSource
+    const mocks = global.createEventSourceMock();
 
     // Render the hook
     const result = framework === 'react'
@@ -241,8 +218,8 @@ export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
         result.onMessage(onMessageMock);
     }
 
-    // Get the event handler function
-    const eventHandler = mockAddEventListener.mock.calls[0][1];
+    // Get the event handler, mimicking second arg in eventSource.addEventListener(eventName, eventHandler);
+    const eventHandler = mocks.addEventListener.mock.calls[0][1];
     const testEvent = { data: 'Test message' };
 
     // Simulate a message
@@ -256,8 +233,6 @@ export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
 
     // Check if the callback was called with the event
     expect(onMessageMock).toHaveBeenCalledWith(testEvent);
-
-    return { result, eventHandler, onMessageMock };
 }
 
 /**
@@ -269,21 +244,11 @@ export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testCleanup(framework, renderFn, useStreamFn) {
-    // Mock EventSource implementation
-    const mockClose = vi.fn();
-    const mockRemoveEventListener = vi.fn();
-
-    // Override the global mock for this specific test
-    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-        addEventListener: vi.fn(),
-        removeEventListener: mockRemoveEventListener,
-        close: mockClose
-    })));
+    // Create mock EventSource
+    const mocks = global.createEventSourceMock();
 
     // Render the hook
-    const rendered = framework === 'react'
-        ? renderFn(() => useStreamFn('/stream'))
-        : renderFn(() => useStreamFn('/stream'));
+    const rendered = renderFn(() => useStreamFn('/stream'));
 
     // Unmount the component
     if (framework === 'react') {
@@ -293,10 +258,8 @@ export function testCleanup(framework, renderFn, useStreamFn) {
     }
 
     // Check if cleanup was performed correctly
-    expect(mockClose).toHaveBeenCalled();
-    expect(mockRemoveEventListener).toHaveBeenCalled();
-
-    return { mockClose, mockRemoveEventListener };
+    expect(mocks.close).toHaveBeenCalled();
+    expect(mocks.removeEventListener).toHaveBeenCalled();
 }
 
 /**
@@ -340,7 +303,6 @@ export function testUrlChange(framework, renderFn, useStreamFn) {
         expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
         expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
 
-        return { mockClose, eventSourceCount };
     } else {
         // For Vue, we need to unmount and remount
         let url = '/stream1';
@@ -358,7 +320,5 @@ export function testUrlChange(framework, renderFn, useStreamFn) {
         expect(mockClose).toHaveBeenCalled();
         expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
         expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
-
-        return { mockClose, eventSourceCount, result, newResult };
     }
 }
