@@ -25,21 +25,21 @@ import { expect, vi } from 'vitest';
  * @param {Object} result - The result object from renderHook or withSetup
  */
 export function assertInitialStreamState(result) {
-  if ('current' in result) {
-    // React style assertions
-    expect(result.current.message).toBe('');
-    expect(result.current.messageParts).toEqual([]);
-    expect(result.current.streamComplete).toBe(false);
-    expect(result.current.error).toBeNull();
-    expect(typeof result.current.onMessage).toBe('function');
-  } else {
-    // Vue style assertions
-    expect(result.message.value).toBe('');
-    expect(result.messageParts.value).toEqual([]);
-    expect(result.streamComplete.value).toBe(false);
-    expect(result.error.value).toBeNull();
-    expect(typeof result.onMessage).toBe('function');
-  }
+    if ('current' in result) {
+        // React style assertions
+        expect(result.current.message).toBe('');
+        expect(result.current.messageParts).toEqual([]);
+        expect(result.current.streamComplete).toBe(false);
+        expect(result.current.error).toBeNull();
+        expect(typeof result.current.onMessage).toBe('function');
+    } else {
+        // Vue style assertions
+        expect(result.message.value).toBe('');
+        expect(result.messageParts.value).toEqual([]);
+        expect(result.streamComplete.value).toBe(false);
+        expect(result.error.value).toBeNull();
+        expect(typeof result.onMessage).toBe('function');
+    }
 }
 
 
@@ -53,58 +53,58 @@ export function assertInitialStreamState(result) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
-  // Create mock EventSource
-  const mocks = global.createEventSourceMock();
-  
-  // Render the hook
-  const result = framework === 'react' 
-    ? renderFn(() => useStreamFn('/stream')).result
-    : renderFn(() => useStreamFn('/stream'))[0];
-  
-  // Get the event handler
-  const eventHandler = mocks.addEventListener.mock.calls[0][1];
-  
-  // Simulate first message
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      eventHandler({ data: 'Hello' });
-    });
-  } else {
-    eventHandler({ data: 'Hello' });
-  }
-  
-  // Check first message
-  if ('current' in result) {
-    // React style assertions
-    expect(result.current.message).toBe('Hello');
-    expect(result.current.messageParts).toEqual(['Hello']);
-  } else {
-    // Vue style assertions
-    expect(result.message.value).toBe('Hello');
-    expect(result.messageParts.value).toEqual(['Hello']);
-  }
-  
-  // Simulate second message
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      eventHandler({ data: 'World' });
-    });
-  } else {
-    eventHandler({ data: 'World' });
-  }
-  
-  // Check combined messages
-  if ('current' in result) {  
-    // React style assertions
-    expect(result.current.message).toBe('Hello World');
-    expect(result.current.messageParts).toEqual(['Hello', 'World']);
-  } else {
-    // Vue style assertions
-    expect(result.message.value).toBe('Hello World');
-    expect(result.messageParts.value).toEqual(['Hello', 'World']);
-  }
-  
-  return { result, mocks };
+    // Create mock EventSource
+    const mocks = global.createEventSourceMock();
+
+    // Render the hook
+    const result = framework === 'react'
+        ? renderFn(() => useStreamFn('/stream')).result
+        : renderFn(() => useStreamFn('/stream'))[0];
+
+    // Get the event handler
+    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+
+    // Simulate first message
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            eventHandler({ data: 'Hello' });
+        });
+    } else {
+        eventHandler({ data: 'Hello' });
+    }
+
+    // Check first message
+    if ('current' in result) {
+        // React style assertions
+        expect(result.current.message).toBe('Hello');
+        expect(result.current.messageParts).toEqual(['Hello']);
+    } else {
+        // Vue style assertions
+        expect(result.message.value).toBe('Hello');
+        expect(result.messageParts.value).toEqual(['Hello']);
+    }
+
+    // Simulate second message
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            eventHandler({ data: 'World' });
+        });
+    } else {
+        eventHandler({ data: 'World' });
+    }
+
+    // Check combined messages
+    if ('current' in result) {
+        // React style assertions
+        expect(result.current.message).toBe('Hello World');
+        expect(result.current.messageParts).toEqual(['Hello', 'World']);
+    } else {
+        // Vue style assertions
+        expect(result.message.value).toBe('Hello World');
+        expect(result.messageParts.value).toEqual(['Hello', 'World']);
+    }
+
+    return { result, mocks };
 }
 
 /**
@@ -117,51 +117,51 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
-  // Create mock EventSource
-  const mockAddEventListener = vi.fn();
-  const mockRemoveEventListener = vi.fn();
-  const mockClose = vi.fn();
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: mockAddEventListener,
-    removeEventListener: mockRemoveEventListener,
-    close: mockClose
-  })));
-  
-  const onCompleteMock = vi.fn();
-  
-  // Render the hook
-  const result = framework === 'react' 
-    ? renderFn(() => useStreamFn('/stream', undefined, onCompleteMock)).result
-    : renderFn(() => useStreamFn('/stream', undefined, onCompleteMock))[0];
-  
-  // Get the event handler function
-  const eventHandler = mockAddEventListener.mock.calls[0][1];
-  
-  // Simulate end signal
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      eventHandler({ data: '</stream>' });
-    });
-  } else {
-    eventHandler({ data: '</stream>' });
-  }
-  
-  // Check if stream complete state was updated correctly
+    // Create mock EventSource
+    const mockAddEventListener = vi.fn();
+    const mockRemoveEventListener = vi.fn();
+    const mockClose = vi.fn();
 
-  if ('current' in result) {
-    // React style assertions
-    expect(result.current.streamComplete).toBe(true);
-  } else {
-    // Vue style assertions
-    expect(result.streamComplete.value).toBe(true);
-  }
+    // Override the global mock for this specific test
+    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
+        addEventListener: mockAddEventListener,
+        removeEventListener: mockRemoveEventListener,
+        close: mockClose
+    })));
 
-  expect(mockClose).toHaveBeenCalled();
-  expect(onCompleteMock).toHaveBeenCalled();
-  
-  return { result, mocks: { addEventListener: mockAddEventListener, close: mockClose } };
+    const onCompleteMock = vi.fn();
+
+    // Render the hook
+    const result = framework === 'react'
+        ? renderFn(() => useStreamFn('/stream', undefined, onCompleteMock)).result
+        : renderFn(() => useStreamFn('/stream', undefined, onCompleteMock))[0];
+
+    // Get the event handler function
+    const eventHandler = mockAddEventListener.mock.calls[0][1];
+
+    // Simulate end signal
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            eventHandler({ data: '</stream>' });
+        });
+    } else {
+        eventHandler({ data: '</stream>' });
+    }
+
+    // Check if stream complete state was updated correctly
+
+    if ('current' in result) {
+        // React style assertions
+        expect(result.current.streamComplete).toBe(true);
+    } else {
+        // Vue style assertions
+        expect(result.streamComplete.value).toBe(true);
+    }
+
+    expect(mockClose).toHaveBeenCalled();
+    expect(onCompleteMock).toHaveBeenCalled();
+
+    return { result, mocks: { addEventListener: mockAddEventListener, close: mockClose } };
 }
 
 /**
@@ -174,35 +174,35 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
-  // Use the unified EventSource mock
-  const mocks = global.createEventSourceMock();
-  
-  // Render the hook
-  const result = framework === 'react' 
-    ? renderFn(() => useStreamFn('/stream')).result
-    : renderFn(() => useStreamFn('/stream'))[0];
-  
-  // Simulate an error
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      mocks.errorHandler()(new Event('error'));
-    });
-  } else {
-    mocks.errorHandler()(new Event('error'));
-  }
-  
-  // Check if error state was updated correctly
-  if (framework === 'react') {
-    expect(result.current.error).not.toBeNull();
-    expect(result.current.error.message).toBe('EventSource connection error');
-  } else {
-    expect(result.error.value).not.toBeNull();
-    expect(result.error.value.message).toBe('EventSource connection error');
-  }
-  
-  expect(mocks.close).toHaveBeenCalled();
-  
-  return { result, errorHandler: mocks.errorHandler, mockClose: mocks.close };
+    // Use the unified EventSource mock
+    const mocks = global.createEventSourceMock();
+
+    // Render the hook
+    const result = framework === 'react'
+        ? renderFn(() => useStreamFn('/stream')).result
+        : renderFn(() => useStreamFn('/stream'))[0];
+
+    // Simulate an error
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            mocks.errorHandler()(new Event('error'));
+        });
+    } else {
+        mocks.errorHandler()(new Event('error'));
+    }
+
+    // Check if error state was updated correctly
+    if (framework === 'react') {
+        expect(result.current.error).not.toBeNull();
+        expect(result.current.error.message).toBe('EventSource connection error');
+    } else {
+        expect(result.error.value).not.toBeNull();
+        expect(result.error.value.message).toBe('EventSource connection error');
+    }
+
+    expect(mocks.close).toHaveBeenCalled();
+
+    return { result, errorHandler: mocks.errorHandler, mockClose: mocks.close };
 }
 
 /**
@@ -215,49 +215,49 @@ export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
-  // Mock EventSource implementation
-  const mockAddEventListener = vi.fn();
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: mockAddEventListener,
-    removeEventListener: vi.fn(),
-    close: vi.fn()
-  })));
-  
-  // Render the hook
-  const result = framework === 'react' 
-    ? renderFn(() => useStreamFn('/stream')).result
-    : renderFn(() => useStreamFn('/stream'))[0];
-  
-  const onMessageMock = vi.fn();
-  
-  // Register the callback
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      result.current.onMessage(onMessageMock);
-    });
-  } else {
-    result.onMessage(onMessageMock);
-  }
-  
-  // Get the event handler function
-  const eventHandler = mockAddEventListener.mock.calls[0][1];
-  const testEvent = { data: 'Test message' };
-  
-  // Simulate a message
-  if (framework === 'react' && actFn) {
-    actFn(() => {
-      eventHandler(testEvent);
-    });
-  } else {
-    eventHandler(testEvent);
-  }
-  
-  // Check if the callback was called with the event
-  expect(onMessageMock).toHaveBeenCalledWith(testEvent);
-  
-  return { result, eventHandler, onMessageMock };
+    // Mock EventSource implementation
+    const mockAddEventListener = vi.fn();
+
+    // Override the global mock for this specific test
+    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
+        addEventListener: mockAddEventListener,
+        removeEventListener: vi.fn(),
+        close: vi.fn()
+    })));
+
+    // Render the hook
+    const result = framework === 'react'
+        ? renderFn(() => useStreamFn('/stream')).result
+        : renderFn(() => useStreamFn('/stream'))[0];
+
+    const onMessageMock = vi.fn();
+
+    // Register the callback
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            result.current.onMessage(onMessageMock);
+        });
+    } else {
+        result.onMessage(onMessageMock);
+    }
+
+    // Get the event handler function
+    const eventHandler = mockAddEventListener.mock.calls[0][1];
+    const testEvent = { data: 'Test message' };
+
+    // Simulate a message
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            eventHandler(testEvent);
+        });
+    } else {
+        eventHandler(testEvent);
+    }
+
+    // Check if the callback was called with the event
+    expect(onMessageMock).toHaveBeenCalledWith(testEvent);
+
+    return { result, eventHandler, onMessageMock };
 }
 
 /**
@@ -269,34 +269,34 @@ export function testOnMessageCallback(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testCleanup(framework, renderFn, useStreamFn) {
-  // Mock EventSource implementation
-  const mockClose = vi.fn();
-  const mockRemoveEventListener = vi.fn();
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: vi.fn(),
-    removeEventListener: mockRemoveEventListener,
-    close: mockClose
-  })));
-  
-  // Render the hook
-  const rendered = framework === 'react' 
-    ? renderFn(() => useStreamFn('/stream'))
-    : renderFn(() => useStreamFn('/stream'));
-  
-  // Unmount the component
-  if (framework === 'react') {
-    rendered.unmount();
-  } else {
-    rendered[1].unmount();
-  }
-  
-  // Check if cleanup was performed correctly
-  expect(mockClose).toHaveBeenCalled();
-  expect(mockRemoveEventListener).toHaveBeenCalled();
-  
-  return { mockClose, mockRemoveEventListener };
+    // Mock EventSource implementation
+    const mockClose = vi.fn();
+    const mockRemoveEventListener = vi.fn();
+
+    // Override the global mock for this specific test
+    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
+        addEventListener: vi.fn(),
+        removeEventListener: mockRemoveEventListener,
+        close: mockClose
+    })));
+
+    // Render the hook
+    const rendered = framework === 'react'
+        ? renderFn(() => useStreamFn('/stream'))
+        : renderFn(() => useStreamFn('/stream'));
+
+    // Unmount the component
+    if (framework === 'react') {
+        rendered.unmount();
+    } else {
+        rendered[1].unmount();
+    }
+
+    // Check if cleanup was performed correctly
+    expect(mockClose).toHaveBeenCalled();
+    expect(mockRemoveEventListener).toHaveBeenCalled();
+
+    return { mockClose, mockRemoveEventListener };
 }
 
 /**
@@ -308,57 +308,57 @@ export function testCleanup(framework, renderFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testUrlChange(framework, renderFn, useStreamFn) {
-  // Mock EventSource implementation
-  const mockClose = vi.fn();
-  let eventSourceCount = 0;
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => {
-    eventSourceCount++;
-    return {
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      close: mockClose
-    };
-  }));
-  
-  // Render with initial URL
-  if (framework === 'react') {
-    const { rerender } = renderFn(
-      (props) => useStreamFn(props.url),
-      { initialProps: { url: '/stream1' } }
-    );
-    
-    // Check initial connection
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
-    
-    // Change URL
-    rerender({ url: '/stream2' });
-    
-    // Check reconnection
-    expect(mockClose).toHaveBeenCalled();
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
-    
-    return { mockClose, eventSourceCount };
-  } else {
-    // For Vue, we need to unmount and remount
-    let url = '/stream1';
-    const [result, app] = renderFn(() => useStreamFn(url));
-    
-    // Check initial connection
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
-    
-    // Change URL and force a re-render
-    url = '/stream2';
-    app.unmount();
-    const [newResult, newApp] = renderFn(() => useStreamFn(url));
-    
-    // Check reconnection
-    expect(mockClose).toHaveBeenCalled();
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
-    
-    return { mockClose, eventSourceCount, result, newResult };
-  }
+    // Mock EventSource implementation
+    const mockClose = vi.fn();
+    let eventSourceCount = 0;
+
+    // Override the global mock for this specific test
+    vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => {
+        eventSourceCount++;
+        return {
+            addEventListener: vi.fn(),
+            removeEventListener: vi.fn(),
+            close: mockClose
+        };
+    }));
+
+    // Render with initial URL
+    if (framework === 'react') {
+        const { rerender } = renderFn(
+            (props) => useStreamFn(props.url),
+            { initialProps: { url: '/stream1' } }
+        );
+
+        // Check initial connection
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
+
+        // Change URL
+        rerender({ url: '/stream2' });
+
+        // Check reconnection
+        expect(mockClose).toHaveBeenCalled();
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
+
+        return { mockClose, eventSourceCount };
+    } else {
+        // For Vue, we need to unmount and remount
+        let url = '/stream1';
+        const [result, app] = renderFn(() => useStreamFn(url));
+
+        // Check initial connection
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
+
+        // Change URL and force a re-render
+        url = '/stream2';
+        app.unmount();
+        const [newResult, newApp] = renderFn(() => useStreamFn(url));
+
+        // Check reconnection
+        expect(mockClose).toHaveBeenCalled();
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith('/stream2');
+
+        return { mockClose, eventSourceCount, result, newResult };
+    }
 }
