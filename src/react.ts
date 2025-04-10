@@ -42,7 +42,7 @@ export function useStream(
     const onCompleteRef = useRef(onComplete);
     const onMessageCallbackRef = useRef<((event: MessageEvent) => void) | null>(null);
 
-    // Update refs when callbacks change
+    // This will allow the developer to dynamically change the callback and onComplete functions
     useEffect(() => {
         callbackRef.current = callback;
         onCompleteRef.current = onComplete;
@@ -130,7 +130,7 @@ export function useStream(
         }
     }, [updateStreamState]);
 
-    // Set up and tear down the EventSource connection
+    // Create a new event source connection or close it when the component unmounts
     useEffect(() => {
         // Reset state when creating a new connection
         resetStreamState();

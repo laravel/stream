@@ -20,7 +20,7 @@ import {
     testOnMessageCallback,
     testCleanup,
     testUrlChange
-} from './stream-assertions';
+} from './stream-tests';
 
 // #1 Initialize with default values
 test('useStream initializes with default values', () => {

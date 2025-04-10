@@ -20,7 +20,7 @@ import {
     testOnMessageCallback,
     testCleanup,
     testUrlChange
-} from './stream-assertions';
+} from './stream-tests';
 
 // Helper function to test composables
 function withSetup(composable) {

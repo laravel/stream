@@ -17,89 +17,6 @@
 
 import { expect, vi } from 'vitest';
 
-// Private helper functions
-
-/**
- * Creates a mock EventSource implementation for testing
- * 
- * @returns {Object} Mock implementation with event handler access
- */
-function createMockEventSource() {
-  const mockAddEventListener = vi.fn();
-  const mockRemoveEventListener = vi.fn();
-  const mockClose = vi.fn();
-  
-  // Create the mock
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: mockAddEventListener,
-    removeEventListener: mockRemoveEventListener,
-    close: mockClose
-  })));
-  
-  return {
-    addEventListener: mockAddEventListener,
-    removeEventListener: mockRemoveEventListener,
-    close: mockClose
-  };
-}
-
-/**
- * Creates a mock EventSource with error handler for testing
- * 
- * @returns {Object} Mock implementation with error handler access
- */
-function createMockEventSourceWithErrorHandler() {
-  const mockAddEventListener = vi.fn();
-  const mockClose = vi.fn();
-  let errorHandler;
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: mockAddEventListener,
-    removeEventListener: vi.fn(),
-    close: mockClose,
-    set onerror(handler) {
-      errorHandler = handler;
-    }
-  })));
-  
-  return {
-    addEventListener: mockAddEventListener,
-    close: mockClose,
-    errorHandler: () => errorHandler
-  };
-}
-
-/**
- * Helper function to assert message state
- */
-function assertMessageProcessed(result, expectedMessage, expectedParts) {
-  if ('current' in result) {
-    // React style assertions
-    expect(result.current.message).toBe(expectedMessage);
-    expect(result.current.messageParts).toEqual(expectedParts);
-  } else {
-    // Vue style assertions
-    expect(result.message.value).toBe(expectedMessage);
-    expect(result.messageParts.value).toEqual(expectedParts);
-  }
-}
-
-/**
- * Helper function to assert stream completion
- */
-function assertStreamCompleted(result) {
-  if ('current' in result) {
-    // React style assertions
-    expect(result.current.streamComplete).toBe(true);
-  } else {
-    // Vue style assertions
-    expect(result.streamComplete.value).toBe(true);
-  }
-}
-
-// Exported test functions
-
 /**
  * #1 - Test initial state values
  * Asserts that a stream hook has the expected initial values
@@ -126,13 +43,6 @@ export function assertInitialStreamState(result) {
 }
 
 
-
-
-
-
-
-
-
 /**
  * #2 - Test message processing
  * Runs a test for processing messages with the appropriate framework
@@ -144,7 +54,7 @@ export function assertInitialStreamState(result) {
  */
 export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
   // Create mock EventSource
-  const mocks = createMockEventSource();
+  const mocks = global.createEventSourceMock();
   
   // Render the hook
   const result = framework === 'react' 
@@ -164,11 +74,15 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
   }
   
   // Check first message
-  assertMessageProcessed(
-    framework === 'react' ? { current: result.current } : result, 
-    'Hello', 
-    ['Hello']
-  );
+  if ('current' in result) {
+    // React style assertions
+    expect(result.current.message).toBe('Hello');
+    expect(result.current.messageParts).toEqual(['Hello']);
+  } else {
+    // Vue style assertions
+    expect(result.message.value).toBe('Hello');
+    expect(result.messageParts.value).toEqual(['Hello']);
+  }
   
   // Simulate second message
   if (framework === 'react' && actFn) {
@@ -180,11 +94,15 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
   }
   
   // Check combined messages
-  assertMessageProcessed(
-    framework === 'react' ? { current: result.current } : result, 
-    'Hello World', 
-    ['Hello', 'World']
-  );
+  if ('current' in result) {  
+    // React style assertions
+    expect(result.current.message).toBe('Hello World');
+    expect(result.current.messageParts).toEqual(['Hello', 'World']);
+  } else {
+    // Vue style assertions
+    expect(result.message.value).toBe('Hello World');
+    expect(result.messageParts.value).toEqual(['Hello', 'World']);
+  }
   
   return { result, mocks };
 }
@@ -231,7 +149,15 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
   }
   
   // Check if stream complete state was updated correctly
-  assertStreamCompleted(framework === 'react' ? { current: result.current } : result);
+
+  if ('current' in result) {
+    // React style assertions
+    expect(result.current.streamComplete).toBe(true);
+  } else {
+    // Vue style assertions
+    expect(result.streamComplete.value).toBe(true);
+  }
+
   expect(mockClose).toHaveBeenCalled();
   expect(onCompleteMock).toHaveBeenCalled();
   
@@ -248,20 +174,8 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
-  // Mock EventSource implementation
-  const mockAddEventListener = vi.fn();
-  const mockClose = vi.fn();
-  let errorHandler;
-  
-  // Override the global mock for this specific test
-  vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
-    addEventListener: mockAddEventListener,
-    removeEventListener: vi.fn(),
-    close: mockClose,
-    set onerror(handler) {
-      errorHandler = handler;
-    }
-  })));
+  // Use the unified EventSource mock
+  const mocks = global.createEventSourceMock();
   
   // Render the hook
   const result = framework === 'react' 
@@ -271,10 +185,10 @@ export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
   // Simulate an error
   if (framework === 'react' && actFn) {
     actFn(() => {
-      errorHandler(new Event('error'));
+      mocks.errorHandler()(new Event('error'));
     });
   } else {
-    errorHandler(new Event('error'));
+    mocks.errorHandler()(new Event('error'));
   }
   
   // Check if error state was updated correctly
@@ -286,9 +200,9 @@ export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
     expect(result.error.value.message).toBe('EventSource connection error');
   }
   
-  expect(mockClose).toHaveBeenCalled();
+  expect(mocks.close).toHaveBeenCalled();
   
-  return { result, errorHandler, mockClose };
+  return { result, errorHandler: mocks.errorHandler, mockClose: mocks.close };
 }
 
 /**
