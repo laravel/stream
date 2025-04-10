@@ -1,6 +1,6 @@
 # Laravel `useStream` Hooks for React and Vue
 
-<p align="center">
+<p align="left">
 <a href="https://github.com/laravel/stream/actions/workflows/ci.yml"><img src="https://github.com/laravel/stream/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
 <a href="https://www.npmjs.com/package/laravel-use-stream"><img src="https://img.shields.io/npm/dt/laravel-use-stream" alt="Total Downloads"></a>
 <a href="https://www.npmjs.com/package/laravel-use-stream"><img src="https://img.shields.io/npm/v/laravel-use-stream" alt="Latest Stable Version"></a>
