@@ -87,12 +87,14 @@ Now, create a new React component `resources/js/pages/stream-test.tsx` to test t
 import { useStream } from 'laravel-use-stream/react';
 
 export default function StreamTest() {
-  const { message, streamComplete } = useStream('/stream');
+  const { message, onComplete } = useStream('/stream');
+
+  onComplete(() => {
+    console.log('Stream completed');
+  });
+
   return (
-    <div className="max-w-2xl mx-auto text-center my-32">
-        <p className="text-lg font-medium">{message || 'Waiting for stream...'}</p>
-        {streamComplete && <p className="text-green-500">✓ Stream completed</p>}
-    </div>
+    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">{message }</p>
   );
 }
 ```
@@ -101,18 +103,37 @@ Or, in a Vue application, you can create a new component at `resources/js/pages/
 
 ```vue
 <template>
-  <div class="max-w-2xl mx-auto text-center my-32">
-    <p class="text-lg font-medium" v-if="message">{{ message }}</p>
-    <p class="text-green-500" v-if="streamComplete">✓ Stream completed</p>
-  </div>
+    <p class="text-lg font-medium max-w-2xl mx-auto text-center my-32" v-if="message">{{ message }}</p>
 </template>
+  
+  <script setup>
+  import { useStream } from 'laravel-use-stream/vue';
+  
+  const { message, onComplete } = useStream('/stream');
 
-<script setup>
-import { useStream } from 'laravel-use-stream/vue';
-
-const { message, streamComplete } = useStream('/stream');
-</script>
+  onComplete(() => {
+    console.log('Stream completed');
+  });
+  </script>
 ```
+
+## Stream Results
+
+There are a few results you can get back from the **useStream** hook, which are the following:
+
+- **message** - The accumulated message
+- **messageParts** - Array of individual message parts
+- **onMessage** - Register a callback for message events
+- **onComplete** - Register a callback for stream completion
+- **onError** - Register a callback for errors
+
+## Stream Params
+
+In addition to the **Source** url that you pass into the `useStream('/source-url')`, you can also pass in the following params:
+
+- **eventName** - Optional custom event name (defaults to 'update')
+- **endSignal** - Optional custom end signal (defaults to '</stream>')
+- **separator** - Optional separator for joining message parts (defaults to ' ')
 
 ## License
 

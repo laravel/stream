@@ -3,9 +3,9 @@ import { ref, onMounted, onUnmounted, watch, readonly, Ref } from 'vue';
 interface StreamResult {
     message: Readonly<Ref<string>>;        // The accumulated message
     messageParts: Readonly<Ref<readonly string[]>>; // Array of individual message parts
-    streamComplete: Readonly<Ref<boolean>>; // Whether the stream has completed
-    error: Readonly<Ref<Error | null>>;    // Any error that occurred
-    onMessage: (callback: (event: MessageEvent) => void) => void; // Function to run when a message event is received
+    onMessage: (callback: (event: MessageEvent) => void) => void; // Register a callback for message events
+    onComplete: (callback: () => void) => void; // Register a callback for stream completion
+    onError: (callback: (error: Error) => void) => void; // Register a callback for errors
 }
 
 // Default values for optional parameters
@@ -26,8 +26,6 @@ const DEFAULT_SEPARATOR = ' ';
  */
 export function useStream(
     url: string,
-    callback?: (event: MessageEvent) => void,
-    onComplete?: (event: MessageEvent) => void,
     eventName: string = DEFAULT_EVENT_NAME,
     endSignal: string = DEFAULT_END_SIGNAL,
     separator: string = DEFAULT_SEPARATOR
@@ -35,21 +33,19 @@ export function useStream(
     // Refs to hold state
     const message = ref('');
     const messageParts = ref<string[]>([]);
-    const streamComplete = ref(false);
-    const error = ref<Error | null>(null);
 
     // Ref to store the EventSource instance
     let source: EventSource | null = null;
 
-    // Ref to store onMessage callback
+    // Store the user-provided handlers
     let onMessageCallback: ((event: MessageEvent) => void) | null = null;
+    let onCompleteCallback: (() => void) | null = null;
+    let onErrorCallback: ((error: Error) => void) | null = null;
 
     // Function to reset the stream state
     const resetState = () => {
         message.value = '';
         messageParts.value = [];
-        streamComplete.value = false;
-        error.value = null;
     };
 
     // Function to handle incoming messages
@@ -59,12 +55,9 @@ export function useStream(
             // Close the connection
             source?.close();
 
-            // Update the stream result to indicate completion
-            streamComplete.value = true;
-
             // Call the onComplete callback if provided
-            if (onComplete) {
-                onComplete(event);
+            if (onCompleteCallback) {
+                onCompleteCallback();
             }
 
             return;
@@ -85,17 +78,14 @@ export function useStream(
         if (onMessageCallback) {
             onMessageCallback(event);
         }
-
-        // Call the callback with the event data if provided
-        if (callback) {
-            callback(event);
-        }
     };
 
     // Function to handle errors
     const handleError = (e: Event) => {
-        console.error('EventSource error:', e);
-        error.value = new Error('EventSource connection error');
+        const err = new Error('EventSource connection error');
+        if (onErrorCallback) {
+            onErrorCallback(err);
+        }
         source?.close();
     };
 
@@ -140,18 +130,24 @@ export function useStream(
         }
     });
 
-    // Function to set the onMessage callback
+    // Registration functions for handlers
     const onMessage = (callback: (event: MessageEvent) => void) => {
         onMessageCallback = callback;
     };
+    const onComplete = (callback: () => void) => {
+        onCompleteCallback = callback;
+    };
+    const onError = (callback: (error: Error) => void) => {
+        onErrorCallback = callback;
+    };
 
-    // Return readonly refs and the onMessage function
+    // Return readonly refs and the registration functions
     return {
         message: readonly(message),
         messageParts: readonly(messageParts),
-        streamComplete: readonly(streamComplete),
-        error: readonly(error),
-        onMessage
+        onMessage,
+        onComplete,
+        onError
     };
 }
 

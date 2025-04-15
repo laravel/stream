@@ -2,14 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface StreamResult {
     message: string;        // The accumulated message
-    onMessage: (callback: (event: MessageEvent) => void) => void; // Function to run when a message event is received
     messageParts: string[]; // Array of individual message parts
-    streamComplete: boolean; // Whether the stream has completed
-    error: Error | null;    // Any error that occurred
+    onMessage: (callback: (event: MessageEvent) => void) => void; // Register a callback for message events
+    onComplete: (callback: () => void) => void; // Register a callback for stream completion
+    onError: (callback: (error: Error) => void) => void; // Register a callback for errors
 }
 
-// Type for internal state management (without the function property)
-type StreamState = Omit<StreamResult, 'onMessage'>;
 
 // Default values for optional parameters
 const DEFAULT_EVENT_NAME = 'update';
@@ -20,8 +18,6 @@ const DEFAULT_SEPARATOR = ' ';
  * Hook for handling server-sent events (SSE) streams
  * 
  * @param url - The URL to connect to for the EventSource
- * @param callback - Optional function to be called when an event is received
- * @param onComplete - Optional callback to be executed when the stream ends
  * @param eventName - Optional custom event name (defaults to 'update')
  * @param endSignal - Optional custom end signal (defaults to '</stream>')
  * @param separator - Optional separator for joining message parts (defaults to ' ')
@@ -29,8 +25,6 @@ const DEFAULT_SEPARATOR = ' ';
  */
 export function useStream(
     url: string,
-    callback?: (event: MessageEvent) => void,
-    onComplete?: (event: MessageEvent) => void,
     eventName: string = DEFAULT_EVENT_NAME,
     endSignal: string = DEFAULT_END_SIGNAL,
     separator: string = DEFAULT_SEPARATOR
@@ -38,42 +32,20 @@ export function useStream(
     // Refs for managing callbacks and connection state
     const sourceRef = useRef<EventSource | null>(null);
     const messagePartsRef = useRef<string[]>([]);
-    const callbackRef = useRef(callback);
-    const onCompleteRef = useRef(onComplete);
     const onMessageCallbackRef = useRef<((event: MessageEvent) => void) | null>(null);
+    const onCompleteCallbackRef = useRef<(() => void) | null>(null);
+    const onErrorCallbackRef = useRef<((error: Error) => void) | null>(null);
 
-    // This will allow the developer to dynamically change the callback and onComplete functions
-    useEffect(() => {
-        callbackRef.current = callback;
-        onCompleteRef.current = onComplete;
-    }, [callback, onComplete]);
-
-    // Initialize stream state
-    const [streamState, setStreamState] = useState<StreamState>({
-        message: '',
-        messageParts: [],
-        streamComplete: false,
-        error: null
-    });
-
-    // Stable callback to update the stream state
-    const updateStreamState = useCallback((updates: Partial<StreamState>) => {
-        setStreamState((prev: StreamState) => ({
-            ...prev,
-            ...updates
-        }));
-    }, []);
+    // State for message and message parts
+    const [message, setMessage] = useState('');
+    const [messageParts, setMessageParts] = useState<string[]>([]);
 
     // Function to reset stream state
     const resetStreamState = useCallback(() => {
         messagePartsRef.current = [];
-        updateStreamState({
-            message: '',
-            messageParts: [],
-            streamComplete: false,
-            error: null
-        });
-    }, [updateStreamState]);
+        setMessage('');
+        setMessageParts([]);
+    }, []);
 
     // Function to handle incoming messages
     const handleMessage = useCallback((event: MessageEvent) => {
@@ -83,52 +55,44 @@ export function useStream(
             if (sourceRef.current) {
                 sourceRef.current.close();
             }
-            
-            // Update the stream state to indicate completion
-            updateStreamState({ streamComplete: true });
-            
+
             // Call the onComplete callback if provided
-            if (onCompleteRef.current) {
-                onCompleteRef.current(event);
+            if (onCompleteCallbackRef.current) {
+                onCompleteCallbackRef.current();
             }
-            
+
             return;
         }
-        
+
         // Clean the data by removing 'data: ' prefix if present
         const cleanData = event.data.startsWith('data: ')
             ? event.data.substring(6) // Remove 'data: ' prefix
             : event.data;
-        
+
         // Add the cleaned message part to our array
         messagePartsRef.current.push(cleanData);
-        
-        // Update the stream state with the new message
-        updateStreamState({
-            message: messagePartsRef.current.join(separator),
-            messageParts: [...messagePartsRef.current]
-        });
-        
+
+        // Update the state with the new message
+        setMessage(messagePartsRef.current.join(separator));
+        setMessageParts([...messagePartsRef.current]);
+
         // Call the onMessage callback with the event data
         if (onMessageCallbackRef.current) {
             onMessageCallbackRef.current(event);
         }
-        
-        // Call the callback with the event data if provided
-        if (callbackRef.current) {
-            callbackRef.current(event);
-        }
-    }, [endSignal, separator, updateStreamState]);
+    }, [endSignal, separator]);
 
     // Function to handle errors
     const handleError = useCallback((error: Event) => {
-        console.error('EventSource error:', error);
-        updateStreamState({ error: new Error('EventSource connection error') });
-        
+        const err = new Error('EventSource connection error');
+        if (onErrorCallbackRef.current) {
+            onErrorCallbackRef.current(err);
+        }
+
         if (sourceRef.current) {
             sourceRef.current.close();
         }
-    }, [updateStreamState]);
+    }, []);
 
     // Create a new event source connection or close it when the component unmounts
     useEffect(() => {
@@ -152,11 +116,18 @@ export function useStream(
         };
     }, [url, eventName, handleMessage, handleError, resetStreamState]);
 
-    // Return the stream result with the onMessage function
+    // Return the stream result with the onMessage, onComplete, and onError registration functions
     return {
-        ...streamState,
+        message,
+        messageParts,
         onMessage: (callback: (event: MessageEvent) => void) => {
             onMessageCallbackRef.current = callback;
+        },
+        onComplete: (callback: () => void) => {
+            onCompleteCallbackRef.current = callback;
+        },
+        onError: (callback: (error: Error) => void) => {
+            onErrorCallbackRef.current = callback;
         }
     };
 }

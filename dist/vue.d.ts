@@ -2,9 +2,9 @@ import { Ref } from 'vue';
 interface StreamResult {
     message: Readonly<Ref<string>>;
     messageParts: Readonly<Ref<readonly string[]>>;
-    streamComplete: Readonly<Ref<boolean>>;
-    error: Readonly<Ref<Error | null>>;
     onMessage: (callback: (event: MessageEvent) => void) => void;
+    onComplete: (callback: () => void) => void;
+    onError: (callback: (error: Error) => void) => void;
 }
 /**
  * Composable for handling server-sent events (SSE) streams in Vue
@@ -17,5 +17,5 @@ interface StreamResult {
  * @param separator - Optional separator for joining message parts (defaults to ' ')
  * @returns StreamResult object containing the accumulated message, onMessage callback, and stream status
  */
-export declare function useStream(url: string, callback?: (event: MessageEvent) => void, onComplete?: (event: MessageEvent) => void, eventName?: string, endSignal?: string, separator?: string): StreamResult;
+export declare function useStream(url: string, eventName?: string, endSignal?: string, separator?: string): StreamResult;
 export default useStream;

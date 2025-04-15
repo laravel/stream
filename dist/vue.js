@@ -14,22 +14,20 @@ const DEFAULT_SEPARATOR = ' ';
  * @param separator - Optional separator for joining message parts (defaults to ' ')
  * @returns StreamResult object containing the accumulated message, onMessage callback, and stream status
  */
-export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_NAME, endSignal = DEFAULT_END_SIGNAL, separator = DEFAULT_SEPARATOR) {
+export function useStream(url, eventName = DEFAULT_EVENT_NAME, endSignal = DEFAULT_END_SIGNAL, separator = DEFAULT_SEPARATOR) {
     // Refs to hold state
     const message = ref('');
     const messageParts = ref([]);
-    const streamComplete = ref(false);
-    const error = ref(null);
     // Ref to store the EventSource instance
     let source = null;
-    // Ref to store onMessage callback
+    // Store the user-provided handlers
     let onMessageCallback = null;
+    let onCompleteCallback = null;
+    let onErrorCallback = null;
     // Function to reset the stream state
     const resetState = () => {
         message.value = '';
         messageParts.value = [];
-        streamComplete.value = false;
-        error.value = null;
     };
     // Function to handle incoming messages
     const handleMessage = (event) => {
@@ -37,11 +35,9 @@ export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_N
         if (event.data === endSignal || event.data === `data: ${endSignal}`) {
             // Close the connection
             source?.close();
-            // Update the stream result to indicate completion
-            streamComplete.value = true;
             // Call the onComplete callback if provided
-            if (onComplete) {
-                onComplete(event);
+            if (onCompleteCallback) {
+                onCompleteCallback();
             }
             return;
         }
@@ -57,15 +53,13 @@ export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_N
         if (onMessageCallback) {
             onMessageCallback(event);
         }
-        // Call the callback with the event data if provided
-        if (callback) {
-            callback(event);
-        }
     };
     // Function to handle errors
     const handleError = (e) => {
-        console.error('EventSource error:', e);
-        error.value = new Error('EventSource connection error');
+        const err = new Error('EventSource connection error');
+        if (onErrorCallback) {
+            onErrorCallback(err);
+        }
         source?.close();
     };
     // Function to set up the EventSource connection
@@ -102,17 +96,23 @@ export function useStream(url, callback, onComplete, eventName = DEFAULT_EVENT_N
             setupConnection();
         }
     });
-    // Function to set the onMessage callback
+    // Registration functions for handlers
     const onMessage = (callback) => {
         onMessageCallback = callback;
     };
-    // Return readonly refs and the onMessage function
+    const onComplete = (callback) => {
+        onCompleteCallback = callback;
+    };
+    const onError = (callback) => {
+        onErrorCallback = callback;
+    };
+    // Return readonly refs and the registration functions
     return {
         message: readonly(message),
         messageParts: readonly(messageParts),
-        streamComplete: readonly(streamComplete),
-        error: readonly(error),
-        onMessage
+        onMessage,
+        onComplete,
+        onError
     };
 }
 export default useStream;

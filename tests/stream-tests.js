@@ -29,16 +29,16 @@ export function assertInitialStreamState(result) {
         // React style assertions
         expect(result.current.message).toBe('');
         expect(result.current.messageParts).toEqual([]);
-        expect(result.current.streamComplete).toBe(false);
-        expect(result.current.error).toBeNull();
         expect(typeof result.current.onMessage).toBe('function');
+        expect(typeof result.current.onComplete).toBe('function');
+        expect(typeof result.current.onError).toBe('function');
     } else {
         // Vue style assertions
         expect(result.message.value).toBe('');
         expect(result.messageParts.value).toEqual([]);
-        expect(result.streamComplete.value).toBe(false);
-        expect(result.error.value).toBeNull();
         expect(typeof result.onMessage).toBe('function');
+        expect(typeof result.onComplete).toBe('function');
+        expect(typeof result.onError).toBe('function');
     }
 }
 
@@ -115,17 +115,24 @@ export function testProcessMessages(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
-    // Create mock EventSource
     const mocks = global.createEventSourceMock();
-
     const onCompleteMock = vi.fn();
 
-    // Render the hook
+    // Render the hook/composable
     const result = framework === 'react'
-        ? renderFn(() => useStreamFn('/stream', () => {}, onCompleteMock)).result
-        : renderFn(() => useStreamFn('/stream', () => {}, onCompleteMock))[0];
+        ? renderFn(() => useStreamFn('/stream')).result
+        : renderFn(() => useStreamFn('/stream'))[0];
 
-    // Get the event handler, mimicking second arg in eventSource.addEventListener(eventName, eventHandler);
+    // Register the onComplete callback
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            result.current.onComplete(onCompleteMock);
+        });
+    } else {
+        result.onComplete(onCompleteMock);
+    }
+
+    // Get the event handler
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
     // Simulate end signal
@@ -135,15 +142,6 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
         });
     } else {
         eventHandler({ data: '</stream>' });
-    }
-
-    // Check if stream complete state was updated correctly
-    if ('current' in result) {
-        // React style assertions
-        expect(result.current.streamComplete).toBe(true);
-    } else {
-        // Vue style assertions
-        expect(result.streamComplete.value).toBe(true);
     }
 
     expect(mocks.close).toHaveBeenCalled();
@@ -160,32 +158,36 @@ export function testStreamCompletion(framework, renderFn, actFn, useStreamFn) {
  * @param {Function} useStreamFn - the useStream hook to test
  */
 export function testErrorHandling(framework, renderFn, actFn, useStreamFn) {
-    // Use the unified EventSource mock
     const mocks = global.createEventSourceMock();
+    const onErrorMock = vi.fn();
 
-    // Render the hook
+    // Render the hook/composable
     const result = framework === 'react'
         ? renderFn(() => useStreamFn('/stream')).result
         : renderFn(() => useStreamFn('/stream'))[0];
 
+    // Register the onError callback
+    if (framework === 'react' && actFn) {
+        actFn(() => {
+            result.current.onError(onErrorMock);
+        });
+    } else {
+        result.onError(onErrorMock);
+    }
+
     // Simulate an error
     if (framework === 'react' && actFn) {
         actFn(() => {
-            mocks.errorHandler()(new Event('error'));
+            mocks.triggerError();
         });
     } else {
-        mocks.errorHandler()(new Event('error'));
+        mocks.triggerError();
     }
 
-    // Check if error state was updated correctly
-    if (framework === 'react') {
-        expect(result.current.error).not.toBeNull();
-        expect(result.current.error.message).toBe('EventSource connection error');
-    } else {
-        expect(result.error.value).not.toBeNull();
-        expect(result.error.value.message).toBe('EventSource connection error');
-    }
-
+    expect(onErrorMock).toHaveBeenCalled();
+    const errorArg = onErrorMock.mock.calls[0][0];
+    expect(errorArg).toBeInstanceOf(Error);
+    expect(errorArg.message).toBe('EventSource connection error');
     expect(mocks.close).toHaveBeenCalled();
 }
 

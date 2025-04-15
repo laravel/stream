@@ -10,7 +10,14 @@ const createEventSourceMock = () => {
     const mockAddEventListener = vi.fn();
     const mockRemoveEventListener = vi.fn();
     const mockClose = vi.fn();
-    let errorHandler = null;
+
+    // Handlers for our new API
+    let onCompleteHandler = null;
+    let onErrorHandler = null;
+
+    // Simulate registration functions
+    const onComplete = vi.fn(cb => { onCompleteHandler = cb; });
+    const onError = vi.fn(cb => { onErrorHandler = cb; });
 
     // Create the mock
     vi.stubGlobal('EventSource', vi.fn().mockImplementation(() => ({
@@ -18,7 +25,8 @@ const createEventSourceMock = () => {
         removeEventListener: mockRemoveEventListener,
         close: mockClose,
         set onerror(handler) {
-            errorHandler = handler;
+            // Legacy: for direct assignment, not used in new API
+            onErrorHandler = handler;
         }
     })));
 
@@ -26,7 +34,11 @@ const createEventSourceMock = () => {
         addEventListener: mockAddEventListener,
         removeEventListener: mockRemoveEventListener,
         close: mockClose,
-        errorHandler: () => errorHandler
+        // New handlers for test access
+        onComplete,
+        onError,
+        triggerComplete: () => { if (onCompleteHandler) onCompleteHandler(); },
+        triggerError: (err = new Error('EventSource connection error')) => { if (onErrorHandler) onErrorHandler(err); }
     };
 };
 
