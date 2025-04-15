@@ -23,14 +23,11 @@ npm install laravel-use-stream
 import { useStream } from 'laravel-use-stream/react';
 
 function App() {
-  const { message, streamComplete } = useStream('/stream-url');
-  return (
-    <div>
-        <h1>My Stream</h1>
-        <p>{message || 'Waiting for stream...'}</p>
-        {streamComplete && <p>✓ Stream completed</p>}
-    </div>
-  );
+    const { message } = useStream('/stream');
+
+    return (
+        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">{ message }</p>
+    );
 }
 ```
 
@@ -38,17 +35,12 @@ function App() {
 
 ```vue
 <template>
-  <div>
-    <h1>My Stream</h1>
-    <p v-if="message">{{ message }}</p>
-    <p v-if="streamComplete">✓ Stream completed</p>
-  </div>
+    <p class="text-lg font-medium max-w-2xl mx-auto text-center my-32" v-if="message">{{ message }}</p>
 </template>
-
+  
 <script setup>
-import { useStream } from 'laravel-use-stream/vue';
-
-const { message, streamComplete } = useStream('/stream-url');
+    import { useStream } from 'laravel-use-stream/vue';
+    const { message } = useStream('/stream');
 </script>
 ```
 
@@ -87,15 +79,15 @@ Now, create a new React component `resources/js/pages/stream-test.tsx` to test t
 import { useStream } from 'laravel-use-stream/react';
 
 export default function StreamTest() {
-  const { message, onComplete } = useStream('/stream');
+    const { message, onComplete } = useStream('/stream');
 
-  onComplete(() => {
-    console.log('Stream completed');
-  });
+    onComplete(() => {
+        console.log('Stream completed');
+    });
 
-  return (
-    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">{message }</p>
-  );
+    return (
+        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">{ message }</p>
+    );
 }
 ```
 
@@ -106,15 +98,15 @@ Or, in a Vue application, you can create a new component at `resources/js/pages/
     <p class="text-lg font-medium max-w-2xl mx-auto text-center my-32" v-if="message">{{ message }}</p>
 </template>
   
-  <script setup>
-  import { useStream } from 'laravel-use-stream/vue';
+<script setup>
+    import { useStream } from 'laravel-use-stream/vue';
   
-  const { message, onComplete } = useStream('/stream');
+    const { message, onComplete } = useStream('/stream');
 
-  onComplete(() => {
-    console.log('Stream completed');
-  });
-  </script>
+    onComplete(() => {
+        console.log('Stream completed');
+    });
+</script>
 ```
 
 ## Stream Results
