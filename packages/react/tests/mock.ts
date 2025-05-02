@@ -11,8 +11,8 @@ const createEventSourceMock = () => {
     const mockRemoveEventListener = vi.fn();
     const mockClose = vi.fn();
 
-    let onCompleteHandler = null;
-    let onErrorHandler = null;
+    let onCompleteHandler: null | (() => void) = null;
+    let onErrorHandler: null | ((error: any) => void) = null;
 
     const onComplete = vi.fn((cb) => {
         onCompleteHandler = cb;
