@@ -94,7 +94,6 @@ it("onMessage callback is called with incoming messages", async () => {
         eventHandler(testEvent);
     });
 
-    // Check if the callback was called with the event
     expect(onMessageMock).toHaveBeenCalledWith(testEvent);
 });
 
