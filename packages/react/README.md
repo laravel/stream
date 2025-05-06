@@ -1,7 +1,7 @@
 # Laravel `useStream` Hooks for React and Vue
 
 <p align="left">
-<a href="https://github.com/laravel/stream/actions/workflows/ci.yml"><img src="https://github.com/laravel/stream/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+<a href="https://github.com/laravel/stream/actions/workflows/tests.yml"><img src="https://github.com/laravel/stream/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-react"><img src="https://img.shields.io/npm/dt/@laravel/stream-react" alt="Total Downloads"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-react"><img src="https://img.shields.io/npm/v/@laravel/stream-react" alt="Latest Stable Version"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-react"><img src="https://img.shields.io/npm/l/@laravel/stream-react" alt="License"></a>
@@ -21,13 +21,13 @@ npm install @laravel/stream-react
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-  const { message } = useStream("/stream");
+    const { message } = useStream("/stream");
 
-  return (
-    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-      {message}
-    </p>
-  );
+    return (
+        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+            {message}
+        </p>
+    );
 }
 ```
 
@@ -64,17 +64,17 @@ Route::get('/stream', function () {
 import { useStream } from "@laravel/stream-react";
 
 export default function StreamTest() {
-  const { message, onComplete } = useStream("/stream");
+    const { message, onComplete } = useStream("/stream");
 
-  onComplete(() => {
-    console.log("Stream completed");
-  });
+    onComplete(() => {
+        console.log("Stream completed");
+    });
 
-  return (
-    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-      {message}
-    </p>
-  );
+    return (
+        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+            {message}
+        </p>
+    );
 }
 ```
 

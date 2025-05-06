@@ -1,7 +1,7 @@
 # Laravel `useStream` Hooks for Vue
 
 <p align="center">
-<a href="https://github.com/laravel/stream/actions/workflows/ci.yml"><img src="https://github.com/laravel/stream/actions/workflows/ci.yml/badge.svg" alt="Build Status"></a>
+<a href="https://github.com/laravel/stream/actions/workflows/tests.yml"><img src="https://github.com/laravel/stream/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-vue"><img src="https://img.shields.io/npm/dt/@laravel/stream-vue" alt="Total Downloads"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-vue"><img src="https://img.shields.io/npm/v/@laravel/stream-vue" alt="Latest Stable Version"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-vue"><img src="https://img.shields.io/npm/l/@laravel/stream-vue" alt="License"></a>
@@ -19,12 +19,12 @@ npm install @laravel/stream-vue
 
 ```vue
 <template>
-  <p
-    class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
-    v-if="message"
-  >
-    {{ message }}
-  </p>
+    <p
+        class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
+        v-if="message"
+    >
+        {{ message }}
+    </p>
 </template>
 
 <script setup>
@@ -64,12 +64,12 @@ Route::get('/stream', function () {
 
 ```vue
 <template>
-  <p
-    class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
-    v-if="message"
-  >
-    {{ message }}
-  </p>
+    <p
+        class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
+        v-if="message"
+    >
+        {{ message }}
+    </p>
 </template>
 
 <script setup>
@@ -78,7 +78,7 @@ import { useStream } from "laravel-use-stream/vue";
 const { message, onComplete } = useStream("/stream");
 
 onComplete(() => {
-  console.log("Stream completed");
+    console.log("Stream completed");
 });
 </script>
 ```
