@@ -11,5 +11,5 @@ export type StreamResult = {
     message: string;
     messageParts: string[];
     close: (resetMessage?: boolean) => void;
-    reset: () => void;
+    clearMessage: () => void;
 };

@@ -98,7 +98,7 @@ export const useStream = (
         message: readonly(message),
         messageParts: readonly(messageParts),
         close: closeConnection,
-        reset: resetMessageState,
+        clearMessage: resetMessageState,
     };
 };
 

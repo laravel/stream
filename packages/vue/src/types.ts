@@ -13,5 +13,5 @@ export type StreamResult = {
     message: Readonly<Ref<string>>;
     messageParts: Readonly<Ref<readonly string[]>>;
     close: (resetMessage?: boolean) => void;
-    reset: () => void;
+    clearMessage: () => void;
 };

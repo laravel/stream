@@ -89,6 +89,6 @@ export const useStream = (
         message,
         messageParts,
         close: closeConnection,
-        reset: resetMessageState,
+        clearMessage: resetMessageState,
     };
 };
