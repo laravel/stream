@@ -92,6 +92,15 @@ echo ""
 
 echo "Running release process..."
 echo ""
-pnpm -r run release
+
+for package_dir in packages/*; do
+    if [ -d "$package_dir" ]; then
+        echo "Releasing $package_dir"
+        cd $package_dir
+        pnpm run release
+        cd ../..
+        echo ""
+    fi
+done
 
 echo "Released!"
