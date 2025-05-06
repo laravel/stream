@@ -31,9 +31,8 @@ describe("useStream", () => {
 
         expect(result.message.value).toBe("");
         expect(result.messageParts.value).toEqual([]);
-        expect(typeof result.onMessage).toBe("function");
-        expect(typeof result.onComplete).toBe("function");
-        expect(typeof result.onError).toBe("function");
+        expect(typeof result.clearMessage).toBe("function");
+        expect(typeof result.close).toBe("function");
     });
 
     it("processes incoming messages correctly", async () => {
@@ -133,8 +132,10 @@ describe("useStream", () => {
             useStream("/stream", { onError: onErrorMock }),
         );
 
-        result.onError(onErrorMock);
-        mocks.triggerError();
+        const errorHandler = mocks.addEventListener.mock.calls[1][1];
+        const testError = new Error("EventSource connection error");
+
+        errorHandler(testError);
 
         expect(onErrorMock).toHaveBeenCalled();
         const errorArg = onErrorMock.mock.calls[0][0];
@@ -144,10 +145,12 @@ describe("useStream", () => {
     });
 
     it("onMessage callback is called with incoming messages", async () => {
-        const [result] = withSetup(() => useStream("/stream"));
         const onMessageMock = vi.fn();
-
-        result.onMessage(onMessageMock);
+        const [result] = withSetup(() =>
+            useStream("/stream", {
+                onMessage: onMessageMock,
+            }),
+        );
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
         const testEvent = { data: "Test message" };
