@@ -23,9 +23,9 @@ Provide your stream URL and the hook will automatically update the `message` wit
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-    const { message } = useStream("/stream");
+  const { message } = useStream("/stream");
 
-    return <div>{message}</div>;
+  return <div>{message}</div>;
 }
 ```
 
@@ -35,15 +35,15 @@ You also have access to the array of message parts:
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-    const { messageParts } = useStream("/stream");
+  const { messageParts } = useStream("/stream");
 
-    return (
-        <ul>
-            {messageParts.forEach((message) => (
-                <li>{message}</li>
-            ))}
-        </ul>
-    );
+  return (
+    <ul>
+      {messageParts.forEach((message) => (
+        <li>{message}</li>
+      ))}
+    </ul>
+  );
 }
 ```
 
@@ -53,22 +53,22 @@ The second parameter is options object, all properties are optional (defaults ar
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-    const { message } = useStream("/stream", {
-        event: "update",
-        endSignal: "</stream>",
-        glue: " ",
-        onMessage: (message) => {
-            //
-        },
-        onError: (error) => {
-            //
-        },
-        onComplete: () => {
-            //
-        },
-    });
+  const { message } = useStream("/stream", {
+    event: "update",
+    endSignal: "</stream>",
+    glue: " ",
+    onMessage: (message) => {
+      //
+    },
+    onError: (error) => {
+      //
+    },
+    onComplete: () => {
+      //
+    },
+  });
 
-    return <div>{message}</div>;
+  return <div>{message}</div>;
 }
 ```
 
