@@ -11,8 +11,8 @@ Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#eve
 
 This monorepo contains two packages:
 
-- [@laravel/stream-react](https://www.npmjs.com/package/@laravel/stream-react)
-- [@laravel/stream-vue](https://www.npmjs.com/package/@laravel/stream-vue)
+- [@laravel/stream-react](https://www.npmjs.com/package/@laravel/stream-react) ([Documentation](./packages/react/README.md))
+- [@laravel/stream-vue](https://www.npmjs.com/package/@laravel/stream-vue) ([Documentation](./packages/vue/README.md))
 
 ## License
 
