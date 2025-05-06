@@ -1,4 +1,3 @@
-
 <p align="left">
 <a href="https://github.com/laravel/stream/actions/workflows/tests.yml"><img src="https://github.com/laravel/stream/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 <a href="https://www.npmjs.com/package/@laravel/stream-vue"><img src="https://img.shields.io/npm/dt/@laravel/stream-vue" alt="Total Downloads"></a>
