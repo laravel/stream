@@ -27,7 +27,7 @@ const { message } = useStream("/stream");
 </script>
 
 <template>
-    <div>{{ message }}</div>
+  <div>{{ message }}</div>
 </template>
 ```
 
@@ -41,11 +41,11 @@ const { messageParts } = useStream("/stream");
 </script>
 
 <template>
-    <ul>
-        <li v-for="message in messageParts">
-            {{ message }}
-        </li>
-    </ul>
+  <ul>
+    <li v-for="message in messageParts">
+      {{ message }}
+    </li>
+  </ul>
 </template>
 ```
 
@@ -56,18 +56,18 @@ The second parameter is options object, all properties are optional (defaults ar
 import { useStream } from "@laravel/stream-vue";
 
 const { message } = useStream("/stream", {
-    event: "update",
-    endSignal: "</stream>",
-    glue: " ",
-    onMessage: (message) => {
-        //
-    },
-    onError: (error) => {
-        //
-    },
-    onComplete: () => {
-        //
-    },
+  event: "update",
+  endSignal: "</stream>",
+  glue: " ",
+  onMessage: (message) => {
+    //
+  },
+  onError: (error) => {
+    //
+  },
+  onComplete: () => {
+    //
+  },
 });
 </script>
 ```
