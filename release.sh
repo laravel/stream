@@ -94,9 +94,4 @@ echo "Running release process..."
 echo ""
 pnpm -r run release
 
-echo "Pushing changes and tags..."
-git push
-git push --tags
-echo ""
-
 echo "Released!"

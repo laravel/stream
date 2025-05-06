@@ -1,6 +1,6 @@
 {
   "name": "@laravel/stream-vue",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "The Laravel useStream hook for Vue",
   "keywords": [
     "laravel",
@@ -41,7 +41,7 @@
     "build": "vite build",
     "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\"",
     "prepublish": "pnpm run build",
-    "release": "pnpm run test && git push --follow-tags && pnpm publish",
+    "release": "vitest --run && git push --follow-tags && pnpm publish",
     "test": "vitest",
     "format": "prettier --write ."
   },
