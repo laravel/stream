@@ -21,13 +21,13 @@ npm install @laravel/stream-react
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-    const { message } = useStream("/stream");
+  const { message } = useStream("/stream");
 
-    return (
-        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-            {message}
-        </p>
-    );
+  return (
+    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+      {message}
+    </p>
+  );
 }
 ```
 
@@ -64,17 +64,17 @@ Route::get('/stream', function () {
 import { useStream } from "@laravel/stream-react";
 
 export default function StreamTest() {
-    const { message, onComplete } = useStream("/stream");
+  const { message, onComplete } = useStream("/stream");
 
-    onComplete(() => {
-        console.log("Stream completed");
-    });
+  onComplete(() => {
+    console.log("Stream completed");
+  });
 
-    return (
-        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-            {message}
-        </p>
-    );
+  return (
+    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+      {message}
+    </p>
+  );
 }
 ```
 
@@ -82,19 +82,19 @@ export default function StreamTest() {
 
 There are a few results you can get back from the **useStream** hook, which are the following:
 
--   **message** - The accumulated message
--   **messageParts** - Array of individual message parts
--   **onMessage** - Register a callback for message events
--   **onComplete** - Register a callback for stream completion
--   **onError** - Register a callback for errors
+- **message** - The accumulated message
+- **messageParts** - Array of individual message parts
+- **onMessage** - Register a callback for message events
+- **onComplete** - Register a callback for stream completion
+- **onError** - Register a callback for errors
 
 ## Stream Params
 
 In addition to the **Source** url that you pass into the `useStream('/source-url')`, you can also pass in the following params:
 
--   **eventName** - Optional custom event name (defaults to 'update')
--   **endSignal** - Optional custom end signal (defaults to '</stream>')
--   **separator** - Optional separator for joining message parts (defaults to ' ')
+- **eventName** - Optional custom event name (defaults to 'update')
+- **endSignal** - Optional custom end signal (defaults to '</stream>')
+- **separator** - Optional separator for joining message parts (defaults to ' ')
 
 ## License
 
