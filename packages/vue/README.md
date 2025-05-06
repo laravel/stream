@@ -19,12 +19,12 @@ npm install @laravel/stream-vue
 
 ```vue
 <template>
-    <p
-        class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
-        v-if="message"
-    >
-        {{ message }}
-    </p>
+  <p
+    class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
+    v-if="message"
+  >
+    {{ message }}
+  </p>
 </template>
 
 <script setup>
@@ -64,12 +64,12 @@ Route::get('/stream', function () {
 
 ```vue
 <template>
-    <p
-        class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
-        v-if="message"
-    >
-        {{ message }}
-    </p>
+  <p
+    class="text-lg font-medium max-w-2xl mx-auto text-center my-32"
+    v-if="message"
+  >
+    {{ message }}
+  </p>
 </template>
 
 <script setup>
@@ -78,7 +78,7 @@ import { useStream } from "laravel-use-stream/vue";
 const { message, onComplete } = useStream("/stream");
 
 onComplete(() => {
-    console.log("Stream completed");
+  console.log("Stream completed");
 });
 </script>
 ```

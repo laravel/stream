@@ -21,13 +21,13 @@ npm install @laravel/stream-react
 import { useStream } from "@laravel/stream-react";
 
 function App() {
-    const { message } = useStream("/stream");
+  const { message } = useStream("/stream");
 
-    return (
-        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-            {message}
-        </p>
-    );
+  return (
+    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+      {message}
+    </p>
+  );
 }
 ```
 
@@ -64,17 +64,17 @@ Route::get('/stream', function () {
 import { useStream } from "@laravel/stream-react";
 
 export default function StreamTest() {
-    const { message, onComplete } = useStream("/stream");
+  const { message, onComplete } = useStream("/stream");
 
-    onComplete(() => {
-        console.log("Stream completed");
-    });
+  onComplete(() => {
+    console.log("Stream completed");
+  });
 
-    return (
-        <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
-            {message}
-        </p>
-    );
+  return (
+    <p className="text-lg font-medium max-w-2xl mx-auto text-center my-32">
+      {message}
+    </p>
+  );
 }
 ```
 
