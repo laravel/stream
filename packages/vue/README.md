@@ -7,7 +7,7 @@
 <a href="https://www.npmjs.com/package/@laravel/stream-vue"><img src="https://img.shields.io/npm/l/@laravel/stream-vue" alt="License"></a>
 </p>
 
-Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/12.x/responses#event-streams) in your Vue application.
+Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your Vue application.
 
 ## Installation
 

@@ -7,7 +7,7 @@
 <a href="https://www.npmjs.com/package/laravel-use-stream"><img src="https://img.shields.io/npm/l/laravel-use-stream" alt="License"></a>
 </p>
 
-Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/12.x/responses#event-streams) in your React and Vue applications.
+Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React and Vue applications.
 
 This monorepo contains two packages:
 

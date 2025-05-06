@@ -7,7 +7,7 @@
 <a href="https://www.npmjs.com/package/@laravel/stream-react"><img src="https://img.shields.io/npm/l/@laravel/stream-react" alt="License"></a>
 </p>
 
-Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/12.x/responses#event-streams) in your React application.
+Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React application.
 
 ## Installation
 
