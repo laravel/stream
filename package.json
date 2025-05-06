@@ -1,6 +1,4 @@
 {
-    "name": "@laravel/stream",
-    "version": "0.1.0",
     "description": "The Laravel useStream hooks for React and Vue",
     "keywords": [
         "laravel",
