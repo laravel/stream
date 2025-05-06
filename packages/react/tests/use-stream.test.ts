@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, it, test, vi } from "vitest";
-import { useStream } from "../src";
+import { useStream } from "../src/hooks/use-stream";
 
 test("useStream initializes with default values", () => {
     const { result } = renderHook(() => useStream("/stream"));

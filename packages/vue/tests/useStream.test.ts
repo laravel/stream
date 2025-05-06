@@ -1,6 +1,6 @@
 import { expect, it, test, vi } from "vitest";
 import { createApp } from "vue";
-import { useStream } from "../src";
+import { useStream } from "../src/composables/useStream";
 
 function withSetup(composable) {
     let result;

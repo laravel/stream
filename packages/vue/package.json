@@ -1,7 +1,7 @@
 {
     "name": "@laravel/stream-vue",
     "version": "0.1.0",
-    "description": "The Laravel useStream hooks for Vue",
+    "description": "The Laravel useStream hook for Vue",
     "keywords": [
         "laravel",
         "stream",
@@ -11,8 +11,6 @@
         "vue",
         "composables"
     ],
-    "author": "Taylor Otwell",
-    "license": "MIT",
     "homepage": "https://github.com/laravel/stream/tree/main/packages/vue#readme",
     "repository": {
         "type": "git",
@@ -21,30 +19,38 @@
     "bugs": {
         "url": "https://github.com/laravel/stream/issues"
     },
+    "license": "MIT",
+    "author": {
+        "name": "Taylor Otwell"
+    },
     "type": "module",
-    "main": "./dist/index.js",
+    "main": "dist/index.umd.js",
+    "module": "dist/index.es.js",
+    "types": "dist/index.d.ts",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.js",
-            "require": "./dist/index.common.js"
+            "import": "./dist/index.es.js",
+            "require": "./dist/index.umd.js"
         }
     },
-    "types": "./dist/index.d.ts",
     "files": [
         "dist"
     ],
     "scripts": {
         "build": "vite build",
-        "test": "vitest --run"
+        "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\"",
+        "prepublish": "pnpm run build",
+        "release": "pnpm run test && git push --follow-tags && pnpm publish",
+        "test": "vitest",
+        "format": "prettier --write ."
     },
     "devDependencies": {
-        "@testing-library/dom": "^10.4.0",
-        "@testing-library/react": "^16.3.0",
-        "@testing-library/vue": "^8.1.0",
         "@types/node": "^22.14.0",
         "@vitejs/plugin-vue": "^5.0.0",
+        "eslint": "^9.0.0",
         "jsdom": "^26.0.0",
+        "prettier": "^3.5.3",
         "typescript": "^5.3.0",
         "vite": "^5.4.19",
         "vite-plugin-dts": "^4.5.3",

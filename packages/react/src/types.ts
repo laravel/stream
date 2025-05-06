@@ -1,0 +1,15 @@
+export type Options = {
+    eventName?: string;
+    endSignal?: string;
+    glue?: string;
+    onMessage?: (event: MessageEvent) => void;
+    onComplete?: () => void;
+    onError?: (error: Event) => void;
+};
+
+export type StreamResult = {
+    message: string;
+    messageParts: string[];
+    close: (resetMessage?: boolean) => void;
+    reset: () => void;
+};
