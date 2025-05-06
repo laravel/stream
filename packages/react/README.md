@@ -1,4 +1,3 @@
-# Laravel `useStream` Hooks for React
 
 <p align="left">
 <a href="https://github.com/laravel/stream/actions/workflows/tests.yml"><img src="https://github.com/laravel/stream/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
