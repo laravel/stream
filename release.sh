@@ -80,9 +80,9 @@ new_version=$(get_current_version "$root_package_json")
 # Install dependencies
 echo "Updating lock file..."
 pnpm i
+echo ""
 
 # Create single git tag
-echo ""
 echo "Creating git tag: v$new_version"
 git tag "v$new_version"
 echo ""
