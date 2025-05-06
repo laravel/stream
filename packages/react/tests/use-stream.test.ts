@@ -153,14 +153,17 @@ describe("useStream", () => {
     it("handles errors correctly", async () => {
         const onErrorMock = vi.fn();
 
-        const result = renderHook(() =>
+        renderHook(() =>
             useStream("/stream", {
                 onError: onErrorMock,
             }),
         ).result;
 
+        const errorHandler = mocks.addEventListener.mock.calls[1][1];
+        const testError = new Error("EventSource connection error");
+
         act(() => {
-            mocks.triggerError();
+            errorHandler(testError);
         });
 
         expect(onErrorMock).toHaveBeenCalled();
@@ -173,7 +176,7 @@ describe("useStream", () => {
     it("onMessage callback is called with incoming messages", async () => {
         const onMessageMock = vi.fn();
 
-        const result = renderHook(() =>
+        renderHook(() =>
             useStream("/stream", {
                 onMessage: onMessageMock,
             }),
