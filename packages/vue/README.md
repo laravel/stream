@@ -19,6 +19,7 @@ npm install @laravel/stream-vue
 
 Provide your stream URL and the hook will automatically update the `message` with the concatenated response as messages are returned from your server:
 
+```vue
 <script setup lang="ts">
 import { useStream } from "@laravel/stream-vue";
 
@@ -28,7 +29,7 @@ const { message } = useStream("/stream");
 <template>
     <div>{{ message }}</div>
 </template>
-````
+```
 
 You also have access to the array of message parts:
 
@@ -40,11 +41,11 @@ const { messageParts } = useStream("/stream");
 </script>
 
 <template>
-  <ul>
-    <li v-for="message in messageParts">
-      {{ message }}
-    </li>
-  </ul>
+    <ul>
+        <li v-for="message in messageParts">
+            {{ message }}
+        </li>
+    </ul>
 </template>
 ```
 
@@ -55,18 +56,18 @@ The second parameter is options object, all properties are optional (defaults ar
 import { useStream } from "@laravel/stream-vue";
 
 const { message } = useStream("/stream", {
-  event: "update",
-  endSignal: "</stream>",
-  glue: " ",
-  onMessage: (message) => {
-    //
-  },
-  onError: (error) => {
-    //
-  },
-  onComplete: () => {
-    //
-  },
+    event: "update",
+    endSignal: "</stream>",
+    glue: " ",
+    onMessage: (message) => {
+        //
+    },
+    onError: (error) => {
+        //
+    },
+    onComplete: () => {
+        //
+    },
 });
 </script>
 ```
