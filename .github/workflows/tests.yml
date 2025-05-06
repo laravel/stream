@@ -1,35 +1,34 @@
 name: tests
 
 on:
-  push:
-    branches:
-      - master
-      - "*.x"
-  pull_request:
-  schedule:
-    - cron: "0 0 * * *"
+    push:
+        branches:
+            - main
+    pull_request:
+    schedule:
+        - cron: "0 0 * * *"
 
 jobs:
-  tests:
-    runs-on: ubuntu-latest
+    tests:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
 
-      - name: Install dependencies
-        run: pnpm install
+            - name: Install dependencies
+              run: pnpm install
 
-      - name: Build
-        run: pnpm build
+            - name: Build
+              run: pnpm build
 
-      - name: ESLint
-        run: pnpm run lint
+            - name: ESLint
+              run: pnpm run lint
 
-      - name: Execute tests
-        run: pnpm test
+            - name: Execute tests
+              run: pnpm test
