@@ -49,7 +49,7 @@ const { messageParts } = useStream("/stream");
 </template>
 ```
 
-The second parameter is options object, all properties are optional (defaults are shown here):
+The second parameter is an options object where all properties are optional (defaults are shown below):
 
 ```vue
 <script setup lang="ts">
@@ -57,8 +57,6 @@ import { useStream } from "@laravel/stream-vue";
 
 const { message } = useStream("/stream", {
   event: "update",
-  endSignal: "</stream>",
-  glue: " ",
   onMessage: (message) => {
     //
   },
@@ -68,11 +66,13 @@ const { message } = useStream("/stream", {
   onComplete: () => {
     //
   },
+  endSignal: "</stream>",
+  glue: " ",
 });
 </script>
 ```
 
-You can close the connection manually by using the returned `close` method:
+You can close the connection manually by using the returned `close` function:
 
 ```vue
 <script setup lang="ts">
@@ -93,7 +93,7 @@ onMounted(() => {
 </template>
 ```
 
-You can also clear the message manually at any time using the returned `clearMessage` method:
+The `clearMessage` function may be used to clear the message content that has been received so far:
 
 ```vue
 <script setup lang="ts">
