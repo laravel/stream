@@ -72,6 +72,44 @@ function App() {
 }
 ```
 
+You can close the connection manually by using the returned `close` method:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+import { useEffect } from "react";
+
+function App() {
+  const { message, close } = useStream("/stream");
+
+  useEffect(() => {
+    setTimeout(() => {
+      close();
+    }, 3000);
+  }, []);
+
+  return <div>{message}</div>;
+}
+```
+
+You can also clear the message manually at any time using the returned `clearMessage` method:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+import { useEffect } from "react";
+
+function App() {
+  const { message, clearMessage } = useStream("/stream");
+
+  useEffect(() => {
+    setTimeout(() => {
+      clearMessage();
+    }, 3000);
+  }, []);
+
+  return <div>{message}</div>;
+}
+```
+
 ## License
 
 Laravel Stream is open-sourced software licensed under the [MIT license](LICENSE.md).

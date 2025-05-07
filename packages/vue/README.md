@@ -72,6 +72,48 @@ const { message } = useStream("/stream", {
 </script>
 ```
 
+You can close the connection manually by using the returned `close` method:
+
+```vue
+<script setup lang="ts">
+import { useStream } from "@laravel/stream-vue";
+import { onMounted } from "vue";
+
+const { message, close } = useStream("/stream");
+
+onMounted(() => {
+  setTimeout(() => {
+    close();
+  }, 3000);
+});
+</script>
+
+<template>
+  <div>{{ message }}</div>
+</template>
+```
+
+You can also clear the message manually at any time using the returned `clearMessage` method:
+
+```vue
+<script setup lang="ts">
+import { useStream } from "@laravel/stream-vue";
+import { onMounted } from "vue";
+
+const { message, clearMessage } = useStream("/stream");
+
+onMounted(() => {
+  setTimeout(() => {
+    clearMessage();
+  }, 3000);
+});
+</script>
+
+<template>
+  <div>{{ message }}</div>
+</template>
+```
+
 ## License
 
 Laravel Stream is open-sourced software licensed under the [MIT license](LICENSE.md).
