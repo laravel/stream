@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { createApp } from "vue";
-import { useStream } from "../src/composables/useStream";
+import { useEventStream } from "../src/composables/useEventStream";
 
 function withSetup(composable) {
   let result;
@@ -17,7 +17,7 @@ function withSetup(composable) {
   return [result, app];
 }
 
-describe("useStream", () => {
+describe("useEventStream", () => {
   let mocks;
 
   beforeEach(() => {
@@ -26,8 +26,8 @@ describe("useStream", () => {
     mocks = global.createEventSourceMock();
   });
 
-  test("useStream initializes with default values", () => {
-    const [result] = withSetup(() => useStream("/stream"));
+  test("useEventStream initializes with default values", () => {
+    const [result] = withSetup(() => useEventStream("/stream"));
 
     expect(result.message.value).toBe("");
     expect(result.messageParts.value).toEqual([]);
@@ -36,7 +36,7 @@ describe("useStream", () => {
   });
 
   it("processes incoming messages correctly", async () => {
-    const [result] = withSetup(() => useStream("/stream"));
+    const [result] = withSetup(() => useEventStream("/stream"));
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
@@ -52,7 +52,7 @@ describe("useStream", () => {
   });
 
   it("can clear the message", async () => {
-    const [result] = withSetup(() => useStream("/stream"));
+    const [result] = withSetup(() => useEventStream("/stream"));
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
@@ -71,7 +71,7 @@ describe("useStream", () => {
   it("can close the stream manually", async () => {
     const onCompleteMock = vi.fn();
     const [result] = withSetup(() =>
-      useStream("/stream", { onComplete: onCompleteMock }),
+      useEventStream("/stream", { onComplete: onCompleteMock }),
     );
 
     result.close();
@@ -81,7 +81,7 @@ describe("useStream", () => {
   });
 
   it("can handle custom glue", async () => {
-    const [result] = withSetup(() => useStream("/stream", { glue: "|" }));
+    const [result] = withSetup(() => useEventStream("/stream", { glue: "|" }));
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
@@ -97,7 +97,7 @@ describe("useStream", () => {
   it("handles end signal correctly", async () => {
     const onCompleteMock = vi.fn();
     const [result] = withSetup(() =>
-      useStream("/stream", { onComplete: onCompleteMock }),
+      useEventStream("/stream", { onComplete: onCompleteMock }),
     );
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -112,7 +112,7 @@ describe("useStream", () => {
     async ({ endSignal }) => {
       const onCompleteMock = vi.fn();
       const [result] = withSetup(() =>
-        useStream("/stream", {
+        useEventStream("/stream", {
           onComplete: onCompleteMock,
           endSignal: "WE DONE",
         }),
@@ -129,7 +129,7 @@ describe("useStream", () => {
   it("handles errors correctly", async () => {
     const onErrorMock = vi.fn();
     const [result] = withSetup(() =>
-      useStream("/stream", { onError: onErrorMock }),
+      useEventStream("/stream", { onError: onErrorMock }),
     );
 
     const errorHandler = mocks.addEventListener.mock.calls[1][1];
@@ -147,7 +147,7 @@ describe("useStream", () => {
   it("onMessage callback is called with incoming messages", async () => {
     const onMessageMock = vi.fn();
     const [result] = withSetup(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         onMessage: onMessageMock,
       }),
     );
@@ -161,7 +161,7 @@ describe("useStream", () => {
   });
 
   it("cleans up EventSource on unmount", async () => {
-    const [result, app] = withSetup(() => useStream("/stream"));
+    const [result, app] = withSetup(() => useEventStream("/stream"));
 
     app.unmount();
 
@@ -185,13 +185,13 @@ describe("useStream", () => {
       }),
     );
 
-    const [result, app] = withSetup(() => useStream("/stream1"));
+    const [result, app] = withSetup(() => useEventStream("/stream1"));
 
     expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
 
     app.unmount();
 
-    const [newResult, newApp] = withSetup(() => useStream("/stream2"));
+    const [newResult, newApp] = withSetup(() => useEventStream("/stream2"));
 
     expect(mockClose).toHaveBeenCalled();
     expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);

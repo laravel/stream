@@ -1,1 +1,1 @@
-export { useStream } from "./hooks/use-stream";
+export { useEventStream } from "./hooks/use-event-stream";

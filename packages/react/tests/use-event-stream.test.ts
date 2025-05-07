@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
-import { useStream } from "../src/hooks/use-stream";
+import { useEventStream } from "../src/hooks/use-event-stream";
 
-describe("useStream", () => {
+describe("useEventStream", () => {
   let mocks;
 
   beforeEach(() => {
@@ -12,8 +12,8 @@ describe("useStream", () => {
     mocks = global.createEventSourceMock();
   });
 
-  test("useStream initializes with default values", () => {
-    const { result } = renderHook(() => useStream("/stream"));
+  test("useEventStream initializes with default values", () => {
+    const { result } = renderHook(() => useEventStream("/stream"));
 
     expect(result.current.message).toBe("");
     expect(result.current.messageParts).toEqual([]);
@@ -22,7 +22,7 @@ describe("useStream", () => {
   });
 
   it("processes incoming messages correctly", async () => {
-    const result = renderHook(() => useStream("/stream")).result;
+    const result = renderHook(() => useEventStream("/stream")).result;
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
@@ -42,7 +42,7 @@ describe("useStream", () => {
   });
 
   it("can clear the message", async () => {
-    const result = renderHook(() => useStream("/stream")).result;
+    const result = renderHook(() => useEventStream("/stream")).result;
 
     const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
@@ -71,7 +71,7 @@ describe("useStream", () => {
   it("can close the stream manually", async () => {
     const onCompleteMock = vi.fn();
     const result = renderHook(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         onComplete: onCompleteMock,
       }),
     ).result;
@@ -86,7 +86,7 @@ describe("useStream", () => {
 
   it("can handle custom glue", async () => {
     const result = renderHook(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         glue: "|",
       }),
     ).result;
@@ -112,7 +112,7 @@ describe("useStream", () => {
     const onCompleteMock = vi.fn();
 
     renderHook(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         onComplete: onCompleteMock,
       }),
     ).result;
@@ -133,7 +133,7 @@ describe("useStream", () => {
       const onCompleteMock = vi.fn();
 
       renderHook(() =>
-        useStream("/stream", {
+        useEventStream("/stream", {
           onComplete: onCompleteMock,
           endSignal: "WE DONE",
         }),
@@ -154,7 +154,7 @@ describe("useStream", () => {
     const onErrorMock = vi.fn();
 
     renderHook(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         onError: onErrorMock,
       }),
     ).result;
@@ -177,7 +177,7 @@ describe("useStream", () => {
     const onMessageMock = vi.fn();
 
     renderHook(() =>
-      useStream("/stream", {
+      useEventStream("/stream", {
         onMessage: onMessageMock,
       }),
     ).result;
@@ -193,7 +193,7 @@ describe("useStream", () => {
   });
 
   it("cleans up EventSource on unmount", async () => {
-    const result = renderHook(() => useStream("/stream"));
+    const result = renderHook(() => useEventStream("/stream"));
 
     result.unmount();
 
@@ -217,7 +217,7 @@ describe("useStream", () => {
       }),
     );
 
-    const { rerender } = renderHook((props) => useStream(props.url), {
+    const { rerender } = renderHook((props) => useEventStream(props.url), {
       initialProps: { url: "/stream1" },
     });
 
