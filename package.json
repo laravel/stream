@@ -1,5 +1,5 @@
 {
-    "description": "The Laravel useStream hooks for React and Vue",
+    "description": "Laravel streaming hooks for React and Vue",
     "keywords": [
         "laravel",
         "stream",

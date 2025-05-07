@@ -13,7 +13,7 @@ const dataPrefix = "data: ";
  *
  * @returns StreamResult object containing the accumulated response, close, and reset functions
  */
-export const useStream = (
+export const useEventStream = (
   url: string,
   {
     eventName = "update",

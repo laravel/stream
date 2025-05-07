@@ -1,1 +1,1 @@
-export { useStream } from "./composables/useStream";
+export { useEventStream } from "./composables/useEventStream";

@@ -20,10 +20,10 @@ npm install @laravel/stream-react
 Provide your stream URL and the hook will automatically update the `message` with the concatenated response as messages are returned from your server:
 
 ```tsx
-import { useStream } from "@laravel/stream-react";
+import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { message } = useStream("/stream");
+  const { message } = useEventStream("/stream");
 
   return <div>{message}</div>;
 }
@@ -32,10 +32,10 @@ function App() {
 You also have access to the array of message parts:
 
 ```tsx
-import { useStream } from "@laravel/stream-react";
+import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { messageParts } = useStream("/stream");
+  const { messageParts } = useEventStream("/stream");
 
   return (
     <ul>
@@ -50,10 +50,10 @@ function App() {
 The second parameter is an options object where all properties are optional (defaults are shown below):
 
 ```tsx
-import { useStream } from "@laravel/stream-react";
+import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { message } = useStream("/stream", {
+  const { message } = useEventStream("/stream", {
     event: "update",
     onMessage: (message) => {
       //
@@ -75,11 +75,11 @@ function App() {
 You can close the connection manually by using the returned `close` function:
 
 ```tsx
-import { useStream } from "@laravel/stream-react";
+import { useEventStream } from "@laravel/stream-react";
 import { useEffect } from "react";
 
 function App() {
-  const { message, close } = useStream("/stream");
+  const { message, close } = useEventStream("/stream");
 
   useEffect(() => {
     setTimeout(() => {
@@ -94,11 +94,11 @@ function App() {
 The `clearMessage` function may be used to clear the message content that has been received so far:
 
 ```tsx
-import { useStream } from "@laravel/stream-react";
+import { useEventStream } from "@laravel/stream-react";
 import { useEffect } from "react";
 
 function App() {
-  const { message, clearMessage } = useStream("/stream");
+  const { message, clearMessage } = useEventStream("/stream");
 
   useEffect(() => {
     setTimeout(() => {

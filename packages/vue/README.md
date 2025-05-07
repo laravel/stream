@@ -21,9 +21,9 @@ Provide your stream URL and the hook will automatically update the `message` wit
 
 ```vue
 <script setup lang="ts">
-import { useStream } from "@laravel/stream-vue";
+import { useEventStream } from "@laravel/stream-vue";
 
-const { message } = useStream("/stream");
+const { message } = useEventStream("/stream");
 </script>
 
 <template>
@@ -35,9 +35,9 @@ You also have access to the array of message parts:
 
 ```vue
 <script setup lang="ts">
-import { useStream } from "@laravel/stream-vue";
+import { useEventStream } from "@laravel/stream-vue";
 
-const { messageParts } = useStream("/stream");
+const { messageParts } = useEventStream("/stream");
 </script>
 
 <template>
@@ -53,9 +53,9 @@ The second parameter is an options object where all properties are optional (def
 
 ```vue
 <script setup lang="ts">
-import { useStream } from "@laravel/stream-vue";
+import { useEventStream } from "@laravel/stream-vue";
 
-const { message } = useStream("/stream", {
+const { message } = useEventStream("/stream", {
   event: "update",
   onMessage: (message) => {
     //
@@ -76,10 +76,10 @@ You can close the connection manually by using the returned `close` function:
 
 ```vue
 <script setup lang="ts">
-import { useStream } from "@laravel/stream-vue";
+import { useEventStream } from "@laravel/stream-vue";
 import { onMounted } from "vue";
 
-const { message, close } = useStream("/stream");
+const { message, close } = useEventStream("/stream");
 
 onMounted(() => {
   setTimeout(() => {
@@ -97,10 +97,10 @@ The `clearMessage` function may be used to clear the message content that has be
 
 ```vue
 <script setup lang="ts">
-import { useStream } from "@laravel/stream-vue";
+import { useEventStream } from "@laravel/stream-vue";
 import { onMounted } from "vue";
 
-const { message, clearMessage } = useStream("/stream");
+const { message, clearMessage } = useEventStream("/stream");
 
 onMounted(() => {
   setTimeout(() => {
