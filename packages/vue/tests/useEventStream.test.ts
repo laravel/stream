@@ -3,216 +3,218 @@ import { createApp } from "vue";
 import { useEventStream } from "../src/composables/useEventStream";
 
 function withSetup(composable) {
-  let result;
+    let result;
 
-  const app = createApp({
-    setup() {
-      result = composable();
-      return () => {};
-    },
-  });
+    const app = createApp({
+        setup() {
+            result = composable();
+            return () => {};
+        },
+    });
 
-  app.mount(document.createElement("div"));
+    app.mount(document.createElement("div"));
 
-  return [result, app];
+    return [result, app];
 }
 
 describe("useEventStream", () => {
-  let mocks;
+    let mocks;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.resetModules();
-    mocks = global.createEventSourceMock();
-  });
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.resetModules();
+        mocks = global.createEventSourceMock();
+    });
 
-  test("useEventStream initializes with default values", () => {
-    const [result] = withSetup(() => useEventStream("/stream"));
+    test("useEventStream initializes with default values", () => {
+        const [result] = withSetup(() => useEventStream("/stream"));
 
-    expect(result.message.value).toBe("");
-    expect(result.messageParts.value).toEqual([]);
-    expect(typeof result.clearMessage).toBe("function");
-    expect(typeof result.close).toBe("function");
-  });
+        expect(result.message.value).toBe("");
+        expect(result.messageParts.value).toEqual([]);
+        expect(typeof result.clearMessage).toBe("function");
+        expect(typeof result.close).toBe("function");
+    });
 
-  it("processes incoming messages correctly", async () => {
-    const [result] = withSetup(() => useEventStream("/stream"));
+    it("processes incoming messages correctly", async () => {
+        const [result] = withSetup(() => useEventStream("/stream"));
 
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
-    eventHandler({ data: "Hello" });
+        eventHandler({ data: "Hello" });
 
-    expect(result.message.value).toBe("Hello");
-    expect(result.messageParts.value).toEqual(["Hello"]);
+        expect(result.message.value).toBe("Hello");
+        expect(result.messageParts.value).toEqual(["Hello"]);
 
-    eventHandler({ data: "World" });
+        eventHandler({ data: "World" });
 
-    expect(result.message.value).toBe("Hello World");
-    expect(result.messageParts.value).toEqual(["Hello", "World"]);
-  });
+        expect(result.message.value).toBe("Hello World");
+        expect(result.messageParts.value).toEqual(["Hello", "World"]);
+    });
 
-  it("processes incoming messages correctly with replace option", async () => {
-    const [result] = withSetup(() =>
-      useEventStream("/stream", { replace: true }),
+    it("processes incoming messages correctly with replace option", async () => {
+        const [result] = withSetup(() =>
+            useEventStream("/stream", { replace: true }),
+        );
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+
+        eventHandler({ data: "Hello" });
+
+        expect(result.message.value).toBe("Hello");
+        expect(result.messageParts.value).toEqual(["Hello"]);
+
+        eventHandler({ data: "World" });
+
+        expect(result.message.value).toBe("World");
+        expect(result.messageParts.value).toEqual(["World"]);
+    });
+
+    it("can clear the message", async () => {
+        const [result] = withSetup(() => useEventStream("/stream"));
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+
+        eventHandler({ data: "Hello" });
+        eventHandler({ data: "World" });
+
+        expect(result.message.value).toBe("Hello World");
+        expect(result.messageParts.value).toEqual(["Hello", "World"]);
+
+        result.clearMessage();
+
+        expect(result.message.value).toBe("");
+        expect(result.messageParts.value).toEqual([]);
+    });
+
+    it("can close the stream manually", async () => {
+        const onCompleteMock = vi.fn();
+        const [result] = withSetup(() =>
+            useEventStream("/stream", { onComplete: onCompleteMock }),
+        );
+
+        result.close();
+
+        expect(mocks.close).toHaveBeenCalled();
+        expect(onCompleteMock).not.toHaveBeenCalled();
+    });
+
+    it("can handle custom glue", async () => {
+        const [result] = withSetup(() =>
+            useEventStream("/stream", { glue: "|" }),
+        );
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+
+        eventHandler({ data: "Hello" });
+        expect(result.message.value).toBe("Hello");
+        expect(result.messageParts.value).toEqual(["Hello"]);
+
+        eventHandler({ data: "World" });
+        expect(result.message.value).toBe("Hello|World");
+        expect(result.messageParts.value).toEqual(["Hello", "World"]);
+    });
+
+    it("handles end signal correctly", async () => {
+        const onCompleteMock = vi.fn();
+        const [result] = withSetup(() =>
+            useEventStream("/stream", { onComplete: onCompleteMock }),
+        );
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        eventHandler({ data: "</stream>" });
+
+        expect(mocks.close).toHaveBeenCalled();
+        expect(onCompleteMock).toHaveBeenCalled();
+    });
+
+    test.each([{ endSignal: "WE DONE" }, { endSignal: "data: WE DONE" }])(
+        "handles custom end signal correctly ($endSignal)",
+        async ({ endSignal }) => {
+            const onCompleteMock = vi.fn();
+            const [result] = withSetup(() =>
+                useEventStream("/stream", {
+                    onComplete: onCompleteMock,
+                    endSignal: "WE DONE",
+                }),
+            );
+
+            const eventHandler = mocks.addEventListener.mock.calls[0][1];
+            eventHandler({ data: endSignal });
+
+            expect(mocks.close).toHaveBeenCalled();
+            expect(onCompleteMock).toHaveBeenCalled();
+        },
     );
 
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+    it("handles errors correctly", async () => {
+        const onErrorMock = vi.fn();
+        const [result] = withSetup(() =>
+            useEventStream("/stream", { onError: onErrorMock }),
+        );
 
-    eventHandler({ data: "Hello" });
+        const errorHandler = mocks.addEventListener.mock.calls[1][1];
+        const testError = new Error("EventSource connection error");
 
-    expect(result.message.value).toBe("Hello");
-    expect(result.messageParts.value).toEqual(["Hello"]);
+        errorHandler(testError);
 
-    eventHandler({ data: "World" });
+        expect(onErrorMock).toHaveBeenCalled();
+        const errorArg = onErrorMock.mock.calls[0][0];
+        expect(errorArg).toBeInstanceOf(Error);
+        expect(errorArg.message).toBe("EventSource connection error");
+        expect(mocks.close).toHaveBeenCalled();
+    });
 
-    expect(result.message.value).toBe("World");
-    expect(result.messageParts.value).toEqual(["World"]);
-  });
+    it("onMessage callback is called with incoming messages", async () => {
+        const onMessageMock = vi.fn();
+        const [result] = withSetup(() =>
+            useEventStream("/stream", {
+                onMessage: onMessageMock,
+            }),
+        );
 
-  it("can clear the message", async () => {
-    const [result] = withSetup(() => useEventStream("/stream"));
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        const testEvent = { data: "Test message" };
 
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        eventHandler(testEvent);
 
-    eventHandler({ data: "Hello" });
-    eventHandler({ data: "World" });
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent);
+    });
 
-    expect(result.message.value).toBe("Hello World");
-    expect(result.messageParts.value).toEqual(["Hello", "World"]);
+    it("cleans up EventSource on unmount", async () => {
+        const [result, app] = withSetup(() => useEventStream("/stream"));
 
-    result.clearMessage();
+        app.unmount();
 
-    expect(result.message.value).toBe("");
-    expect(result.messageParts.value).toEqual([]);
-  });
+        expect(mocks.close).toHaveBeenCalled();
+        expect(mocks.removeEventListener).toHaveBeenCalled();
+    });
 
-  it("can close the stream manually", async () => {
-    const onCompleteMock = vi.fn();
-    const [result] = withSetup(() =>
-      useEventStream("/stream", { onComplete: onCompleteMock }),
-    );
+    it("reconnects when URL changes", async () => {
+        const mockClose = vi.fn();
+        let eventSourceCount = 0;
 
-    result.close();
+        vi.stubGlobal(
+            "EventSource",
+            vi.fn().mockImplementation(() => {
+                eventSourceCount++;
+                return {
+                    addEventListener: vi.fn(),
+                    removeEventListener: vi.fn(),
+                    close: mockClose,
+                };
+            }),
+        );
 
-    expect(mocks.close).toHaveBeenCalled();
-    expect(onCompleteMock).not.toHaveBeenCalled();
-  });
+        const [result, app] = withSetup(() => useEventStream("/stream1"));
 
-  it("can handle custom glue", async () => {
-    const [result] = withSetup(() => useEventStream("/stream", { glue: "|" }));
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
 
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        app.unmount();
 
-    eventHandler({ data: "Hello" });
-    expect(result.message.value).toBe("Hello");
-    expect(result.messageParts.value).toEqual(["Hello"]);
+        const [newResult, newApp] = withSetup(() => useEventStream("/stream2"));
 
-    eventHandler({ data: "World" });
-    expect(result.message.value).toBe("Hello|World");
-    expect(result.messageParts.value).toEqual(["Hello", "World"]);
-  });
-
-  it("handles end signal correctly", async () => {
-    const onCompleteMock = vi.fn();
-    const [result] = withSetup(() =>
-      useEventStream("/stream", { onComplete: onCompleteMock }),
-    );
-
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
-    eventHandler({ data: "</stream>" });
-
-    expect(mocks.close).toHaveBeenCalled();
-    expect(onCompleteMock).toHaveBeenCalled();
-  });
-
-  test.each([{ endSignal: "WE DONE" }, { endSignal: "data: WE DONE" }])(
-    "handles custom end signal correctly ($endSignal)",
-    async ({ endSignal }) => {
-      const onCompleteMock = vi.fn();
-      const [result] = withSetup(() =>
-        useEventStream("/stream", {
-          onComplete: onCompleteMock,
-          endSignal: "WE DONE",
-        }),
-      );
-
-      const eventHandler = mocks.addEventListener.mock.calls[0][1];
-      eventHandler({ data: endSignal });
-
-      expect(mocks.close).toHaveBeenCalled();
-      expect(onCompleteMock).toHaveBeenCalled();
-    },
-  );
-
-  it("handles errors correctly", async () => {
-    const onErrorMock = vi.fn();
-    const [result] = withSetup(() =>
-      useEventStream("/stream", { onError: onErrorMock }),
-    );
-
-    const errorHandler = mocks.addEventListener.mock.calls[1][1];
-    const testError = new Error("EventSource connection error");
-
-    errorHandler(testError);
-
-    expect(onErrorMock).toHaveBeenCalled();
-    const errorArg = onErrorMock.mock.calls[0][0];
-    expect(errorArg).toBeInstanceOf(Error);
-    expect(errorArg.message).toBe("EventSource connection error");
-    expect(mocks.close).toHaveBeenCalled();
-  });
-
-  it("onMessage callback is called with incoming messages", async () => {
-    const onMessageMock = vi.fn();
-    const [result] = withSetup(() =>
-      useEventStream("/stream", {
-        onMessage: onMessageMock,
-      }),
-    );
-
-    const eventHandler = mocks.addEventListener.mock.calls[0][1];
-    const testEvent = { data: "Test message" };
-
-    eventHandler(testEvent);
-
-    expect(onMessageMock).toHaveBeenCalledWith(testEvent);
-  });
-
-  it("cleans up EventSource on unmount", async () => {
-    const [result, app] = withSetup(() => useEventStream("/stream"));
-
-    app.unmount();
-
-    expect(mocks.close).toHaveBeenCalled();
-    expect(mocks.removeEventListener).toHaveBeenCalled();
-  });
-
-  it("reconnects when URL changes", async () => {
-    const mockClose = vi.fn();
-    let eventSourceCount = 0;
-
-    vi.stubGlobal(
-      "EventSource",
-      vi.fn().mockImplementation(() => {
-        eventSourceCount++;
-        return {
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-          close: mockClose,
-        };
-      }),
-    );
-
-    const [result, app] = withSetup(() => useEventStream("/stream1"));
-
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(1);
-
-    app.unmount();
-
-    const [newResult, newApp] = withSetup(() => useEventStream("/stream2"));
-
-    expect(mockClose).toHaveBeenCalled();
-    expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith("/stream2");
-  });
+        expect(mockClose).toHaveBeenCalled();
+        expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
+        expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith("/stream2");
+    });
 });
