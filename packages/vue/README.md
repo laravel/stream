@@ -68,6 +68,7 @@ const { message } = useEventStream("/stream", {
   },
   endSignal: "</stream>",
   glue: " ",
+  replace: false,
 });
 </script>
 ```

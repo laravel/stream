@@ -66,6 +66,7 @@ function App() {
     },
     endSignal: "</stream>",
     glue: " ",
+    replace: false,
   });
 
   return <div>{message}</div>;
