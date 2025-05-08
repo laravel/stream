@@ -7,10 +7,25 @@ import { vi } from "vitest";
  * @returns {Object} Mock implementation with event handler and error handler access
  */
 const createEventSourceMock = () => {
-    const mockAddEventListener = vi.fn();
-    const mockRemoveEventListener = vi.fn();
+    const mockAddEventListener = vi.fn((eventType, handler) => {
+        if (!eventHandlers[eventType]) {
+            eventHandlers[eventType] = [];
+        }
+
+        eventHandlers[eventType].push(handler);
+    });
+
+    const mockRemoveEventListener = vi.fn((eventType, handler) => {
+        if (eventHandlers[eventType]) {
+            eventHandlers[eventType] = eventHandlers[eventType].filter(
+                (h) => h !== handler,
+            );
+        }
+    });
+
     const mockClose = vi.fn();
 
+    const eventHandlers: Record<string, Array<(event: any) => void>> = {};
     let onCompleteHandler: null | (() => void) = null;
     let onErrorHandler: null | ((error: any) => void) = null;
 
@@ -50,6 +65,11 @@ const createEventSourceMock = () => {
         triggerError: (err = new Error("EventSource connection error")) => {
             if (onErrorHandler) {
                 onErrorHandler(err);
+            }
+        },
+        triggerEvent: (eventType: string, event: any) => {
+            if (eventHandlers[eventType]) {
+                eventHandlers[eventType].forEach((handler) => handler(event));
             }
         },
     };

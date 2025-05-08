@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Options, StreamResult } from "../types";
 
 const dataPrefix = "data: ";
@@ -27,6 +27,10 @@ export const useEventStream = (
 ): StreamResult => {
     const sourceRef = useRef<EventSource | null>(null);
     const messagePartsRef = useRef<string[]>([]);
+    const eventNames = useMemo(
+        () => (Array.isArray(eventName) ? eventName : [eventName]),
+        Array.isArray(eventName) ? eventName : [eventName],
+    );
 
     const [message, setMessage] = useState("");
     const [messageParts, setMessageParts] = useState<string[]>([]);
@@ -38,7 +42,7 @@ export const useEventStream = (
     }, []);
 
     const handleMessage = useCallback(
-        (event: MessageEvent) => {
+        (event: MessageEvent<string>) => {
             if ([endSignal, `${dataPrefix}${endSignal}`].includes(event.data)) {
                 closeConnection();
                 onComplete();
@@ -61,7 +65,7 @@ export const useEventStream = (
 
             onMessage(event);
         },
-        [eventName, glue],
+        [eventNames, glue],
     );
 
     const handleError = useCallback((error: Event) => {
@@ -70,7 +74,9 @@ export const useEventStream = (
     }, []);
 
     const closeConnection = useCallback((resetMessage: boolean = false) => {
-        sourceRef.current?.removeEventListener(eventName, handleMessage);
+        eventNames.forEach((name) => {
+            sourceRef.current?.removeEventListener(name, handleMessage);
+        });
         sourceRef.current?.removeEventListener("error", handleError);
         sourceRef.current?.close();
         sourceRef.current = null;
@@ -84,11 +90,14 @@ export const useEventStream = (
         resetMessageState();
 
         sourceRef.current = new EventSource(url);
-        sourceRef.current.addEventListener(eventName, handleMessage);
+
+        eventNames.forEach((name) => {
+            sourceRef.current?.addEventListener(name, handleMessage);
+        });
         sourceRef.current.addEventListener("error", handleError);
 
         return closeConnection;
-    }, [url, eventName, handleMessage, handleError, resetMessageState]);
+    }, [url, eventNames, handleMessage, handleError, resetMessageState]);
 
     return {
         message,

@@ -49,6 +49,25 @@ const { messageParts } = useEventStream("/stream");
 </template>
 ```
 
+If you'd like to listen to multiple events:
+
+```vue
+<script setup lang="ts">
+import { useEventStream } from "@laravel/stream-vue";
+
+useEventStream("/stream", {
+    eventName: ["update", "create"],
+    onMessage: (event) => {
+        if (event.type === "update") {
+            // Handle update
+        } else {
+            // Handle create
+        }
+    },
+});
+</script>
+```
+
 The second parameter is an options object where all properties are optional (defaults are shown below):
 
 ```vue
