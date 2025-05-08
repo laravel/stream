@@ -217,4 +217,46 @@ describe("useEventStream", () => {
         expect(vi.mocked(EventSource)).toHaveBeenCalledTimes(2);
         expect(vi.mocked(EventSource)).toHaveBeenLastCalledWith("/stream2");
     });
+
+    it("can handle multiple events", async () => {
+        const onMessageMock = vi.fn();
+        withSetup(() =>
+            useEventStream("/stream", {
+                onMessage: onMessageMock,
+                eventName: ["message", "customEvent"],
+            }),
+        );
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        const testEvent1 = { data: "Test message", type: "message" };
+        const testEvent2 = { data: "Test custom event", type: "customEvent" };
+
+        eventHandler(testEvent1);
+        eventHandler(testEvent2);
+
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent1);
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent2);
+    });
+
+    it("will ignore events we are not listening to", async () => {
+        const onMessageMock = vi.fn();
+        withSetup(() =>
+            useEventStream("/stream", {
+                onMessage: onMessageMock,
+                eventName: ["message", "customEvent"],
+            }),
+        );
+
+        const testEvent1 = { data: "Test message", type: "message" };
+        const testEvent2 = { data: "Test custom event", type: "customEvent" };
+        const ignoredEvent = { data: "Ignored event", type: "ignoredEvent" };
+
+        mocks.triggerEvent("message", testEvent1);
+        mocks.triggerEvent("customEvent", testEvent2);
+        mocks.triggerEvent("ignoredEvent", ignoredEvent);
+
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent1);
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent2);
+        expect(onMessageMock).not.toHaveBeenCalledWith(ignoredEvent);
+    });
 });

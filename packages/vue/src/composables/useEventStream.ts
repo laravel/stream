@@ -27,6 +27,7 @@ export const useEventStream = (
 ): StreamResult => {
     const message = ref("");
     const messageParts = ref<string[]>([]);
+    const eventNames = Array.isArray(eventName) ? eventName : [eventName];
 
     let source: EventSource | null = null;
 
@@ -36,8 +37,9 @@ export const useEventStream = (
     };
 
     const closeConnection = (resetMessage: boolean = false) => {
-        source?.removeEventListener(eventName, handleMessage);
-        source?.removeEventListener("error", handleError);
+        eventNames.forEach((eventName) => {
+            source?.removeEventListener(eventName, handleMessage);
+        });
         source?.close();
         source = null;
 
@@ -46,7 +48,7 @@ export const useEventStream = (
         }
     };
 
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent<string>) => {
         if ([endSignal, `${dataPrefix}${endSignal}`].includes(event.data)) {
             closeConnection();
             onComplete();
@@ -77,7 +79,10 @@ export const useEventStream = (
         resetMessageState();
 
         source = new EventSource(url);
-        source.addEventListener(eventName, handleMessage);
+
+        eventNames.forEach((eventName) => {
+            source!.addEventListener(eventName, handleMessage);
+        });
         source.addEventListener("error", handleError);
     };
 

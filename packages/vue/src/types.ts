@@ -1,7 +1,7 @@
 import { type Ref } from "vue";
 
 export type Options = {
-    eventName?: string;
+    eventName?: string | string[];
     endSignal?: string;
     glue?: string;
     replace?: boolean;
