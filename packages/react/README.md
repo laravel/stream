@@ -47,6 +47,27 @@ function App() {
 }
 ```
 
+If you'd like to listen to multiple events:
+
+```tsx
+import { useEventStream } from "@laravel/stream-react";
+
+function App() {
+    useEventStream("/stream", {
+        eventName: ["update", "create"],
+        onMessage: (event) => {
+            if (event.type === "update") {
+                // Handle update
+            } else {
+                // Handle create
+            }
+        },
+    });
+
+    return null;
+}
+```
+
 The second parameter is an options object where all properties are optional (defaults are shown below):
 
 ```tsx
