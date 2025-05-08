@@ -214,6 +214,55 @@ describe("useEventStream", () => {
         expect(onMessageMock).toHaveBeenCalledWith(testEvent);
     });
 
+    it("can handle multiple events", async () => {
+        const onMessageMock = vi.fn();
+
+        renderHook(() =>
+            useEventStream("/stream", {
+                onMessage: onMessageMock,
+                eventName: ["message", "customEvent"],
+            }),
+        ).result;
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        const testEvent1 = { data: "Test message", type: "message" };
+        const testEvent2 = { data: "Test custom event", type: "customEvent" };
+
+        act(() => {
+            eventHandler(testEvent1);
+            eventHandler(testEvent2);
+        });
+
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent1);
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent2);
+    });
+
+    it.only("will ignore events we are not listening to", async () => {
+        const onMessageMock = vi.fn();
+
+        renderHook(() =>
+            useEventStream("/stream", {
+                onMessage: onMessageMock,
+                eventName: ["message", "customEvent"],
+            }),
+        ).result;
+
+        const eventHandler = mocks.addEventListener.mock.calls[0][1];
+        const testEvent1 = { data: "Test message", type: "message" };
+        const testEvent2 = { data: "Test custom event", type: "customEvent" };
+        const ignoredEvent = { data: "Ignored event", type: "ignoredEvent" };
+
+        act(() => {
+            eventHandler(testEvent1);
+            eventHandler(testEvent2);
+            eventHandler(ignoredEvent);
+        });
+
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent1);
+        expect(onMessageMock).toHaveBeenCalledWith(testEvent2);
+        expect(onMessageMock).not.toHaveBeenCalledWith(ignoredEvent);
+    });
+
     it("cleans up EventSource on unmount", async () => {
         const result = renderHook(() => useEventStream("/stream"));
 
