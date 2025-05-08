@@ -237,7 +237,7 @@ describe("useEventStream", () => {
         expect(onMessageMock).toHaveBeenCalledWith(testEvent2);
     });
 
-    it.only("will ignore events we are not listening to", async () => {
+    it("will ignore events we are not listening to", async () => {
         const onMessageMock = vi.fn();
 
         renderHook(() =>
@@ -247,15 +247,14 @@ describe("useEventStream", () => {
             }),
         ).result;
 
-        const eventHandler = mocks.addEventListener.mock.calls[0][1];
         const testEvent1 = { data: "Test message", type: "message" };
         const testEvent2 = { data: "Test custom event", type: "customEvent" };
         const ignoredEvent = { data: "Ignored event", type: "ignoredEvent" };
 
         act(() => {
-            eventHandler(testEvent1);
-            eventHandler(testEvent2);
-            eventHandler(ignoredEvent);
+            mocks.triggerEvent("message", testEvent1);
+            mocks.triggerEvent("customEvent", testEvent2);
+            mocks.triggerEvent("ignoredEvent", ignoredEvent);
         });
 
         expect(onMessageMock).toHaveBeenCalledWith(testEvent1);
