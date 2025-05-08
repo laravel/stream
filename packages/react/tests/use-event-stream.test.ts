@@ -41,6 +41,28 @@ describe("useEventStream", () => {
     expect(result.current.messageParts).toEqual(["Hello", "World"]);
   });
 
+  it("processes incoming messages correctly with replace option", async () => {
+    const result = renderHook(() =>
+      useEventStream("/stream", { replace: true }),
+    ).result;
+
+    const eventHandler = mocks.addEventListener.mock.calls[0][1];
+
+    act(() => {
+      eventHandler({ data: "Hello" });
+    });
+
+    expect(result.current.message).toBe("Hello");
+    expect(result.current.messageParts).toEqual(["Hello"]);
+
+    act(() => {
+      eventHandler({ data: "World" });
+    });
+
+    expect(result.current.message).toBe("World");
+    expect(result.current.messageParts).toEqual(["World"]);
+  });
+
   it("can clear the message", async () => {
     const result = renderHook(() => useEventStream("/stream")).result;
 

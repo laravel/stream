@@ -4,6 +4,7 @@ export type Options = {
   eventName?: string;
   endSignal?: string;
   glue?: string;
+  replace?: boolean;
   onMessage?: (event: MessageEvent) => void;
   onComplete?: () => void;
   onError?: (error: Event) => void;

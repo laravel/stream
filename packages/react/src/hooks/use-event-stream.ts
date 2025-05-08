@@ -19,6 +19,7 @@ export const useEventStream = (
     eventName = "update",
     endSignal = "</stream>",
     glue = " ",
+    replace = false,
     onMessage = () => null,
     onComplete = () => null,
     onError = () => null,
@@ -43,6 +44,10 @@ export const useEventStream = (
         onComplete();
 
         return;
+      }
+
+      if (replace) {
+        resetMessageState();
       }
 
       messagePartsRef.current.push(
