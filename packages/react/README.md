@@ -23,9 +23,9 @@ Provide your stream URL and the hook will automatically update the `message` wit
 import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { message } = useEventStream("/stream");
+    const { message } = useEventStream("/stream");
 
-  return <div>{message}</div>;
+    return <div>{message}</div>;
 }
 ```
 
@@ -35,15 +35,15 @@ You also have access to the array of message parts:
 import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { messageParts } = useEventStream("/stream");
+    const { messageParts } = useEventStream("/stream");
 
-  return (
-    <ul>
-      {messageParts.forEach((message) => (
-        <li>{message}</li>
-      ))}
-    </ul>
-  );
+    return (
+        <ul>
+            {messageParts.forEach((message) => (
+                <li>{message}</li>
+            ))}
+        </ul>
+    );
 }
 ```
 
@@ -53,23 +53,23 @@ The second parameter is an options object where all properties are optional (def
 import { useEventStream } from "@laravel/stream-react";
 
 function App() {
-  const { message } = useEventStream("/stream", {
-    event: "update",
-    onMessage: (message) => {
-      //
-    },
-    onError: (error) => {
-      //
-    },
-    onComplete: () => {
-      //
-    },
-    endSignal: "</stream>",
-    glue: " ",
-    replace: false,
-  });
+    const { message } = useEventStream("/stream", {
+        event: "update",
+        onMessage: (message) => {
+            //
+        },
+        onError: (error) => {
+            //
+        },
+        onComplete: () => {
+            //
+        },
+        endSignal: "</stream>",
+        glue: " ",
+        replace: false,
+    });
 
-  return <div>{message}</div>;
+    return <div>{message}</div>;
 }
 ```
 
@@ -80,15 +80,15 @@ import { useEventStream } from "@laravel/stream-react";
 import { useEffect } from "react";
 
 function App() {
-  const { message, close } = useEventStream("/stream");
+    const { message, close } = useEventStream("/stream");
 
-  useEffect(() => {
-    setTimeout(() => {
-      close();
-    }, 3000);
-  }, []);
+    useEffect(() => {
+        setTimeout(() => {
+            close();
+        }, 3000);
+    }, []);
 
-  return <div>{message}</div>;
+    return <div>{message}</div>;
 }
 ```
 
@@ -99,15 +99,15 @@ import { useEventStream } from "@laravel/stream-react";
 import { useEffect } from "react";
 
 function App() {
-  const { message, clearMessage } = useEventStream("/stream");
+    const { message, clearMessage } = useEventStream("/stream");
 
-  useEffect(() => {
-    setTimeout(() => {
-      clearMessage();
-    }, 3000);
-  }, []);
+    useEffect(() => {
+        setTimeout(() => {
+            clearMessage();
+        }, 3000);
+    }, []);
 
-  return <div>{message}</div>;
+    return <div>{message}</div>;
 }
 ```
 

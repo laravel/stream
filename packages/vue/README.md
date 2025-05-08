@@ -27,7 +27,7 @@ const { message } = useEventStream("/stream");
 </script>
 
 <template>
-  <div>{{ message }}</div>
+    <div>{{ message }}</div>
 </template>
 ```
 
@@ -41,11 +41,11 @@ const { messageParts } = useEventStream("/stream");
 </script>
 
 <template>
-  <ul>
-    <li v-for="message in messageParts">
-      {{ message }}
-    </li>
-  </ul>
+    <ul>
+        <li v-for="message in messageParts">
+            {{ message }}
+        </li>
+    </ul>
 </template>
 ```
 
@@ -56,19 +56,19 @@ The second parameter is an options object where all properties are optional (def
 import { useEventStream } from "@laravel/stream-vue";
 
 const { message } = useEventStream("/stream", {
-  event: "update",
-  onMessage: (message) => {
-    //
-  },
-  onError: (error) => {
-    //
-  },
-  onComplete: () => {
-    //
-  },
-  endSignal: "</stream>",
-  glue: " ",
-  replace: false,
+    event: "update",
+    onMessage: (message) => {
+        //
+    },
+    onError: (error) => {
+        //
+    },
+    onComplete: () => {
+        //
+    },
+    endSignal: "</stream>",
+    glue: " ",
+    replace: false,
 });
 </script>
 ```
@@ -83,14 +83,14 @@ import { onMounted } from "vue";
 const { message, close } = useEventStream("/stream");
 
 onMounted(() => {
-  setTimeout(() => {
-    close();
-  }, 3000);
+    setTimeout(() => {
+        close();
+    }, 3000);
 });
 </script>
 
 <template>
-  <div>{{ message }}</div>
+    <div>{{ message }}</div>
 </template>
 ```
 
@@ -104,14 +104,14 @@ import { onMounted } from "vue";
 const { message, clearMessage } = useEventStream("/stream");
 
 onMounted(() => {
-  setTimeout(() => {
-    clearMessage();
-  }, 3000);
+    setTimeout(() => {
+        clearMessage();
+    }, 3000);
 });
 </script>
 
 <template>
-  <div>{{ message }}</div>
+    <div>{{ message }}</div>
 </template>
 ```
 
