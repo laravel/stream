@@ -88,6 +88,7 @@ echo ""
 
 echo "Creating git tag: v$new_version"
 git tag "v$new_version"
+git push --tags
 echo ""
 
 echo "Running release process..."
