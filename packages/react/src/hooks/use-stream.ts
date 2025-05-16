@@ -5,7 +5,7 @@ import { StreamListenerCallback, StreamMeta, StreamOptions } from "../types";
 const streams = new Map<string, StreamMeta>();
 const listeners = new Map<string, StreamListenerCallback[]>();
 
-const resolveStream = (id: string) => {
+const resolveStream = (id: string): StreamMeta => {
     const stream = streams.get(id);
 
     if (stream) {
@@ -74,9 +74,11 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
             ...params,
         });
 
+        const updatedStream = resolveStream(id.current);
+
         listeners
             .get(id.current)
-            ?.forEach((listener) => listener(streams.get(id.current)!));
+            ?.forEach((listener) => listener(updatedStream));
     }, []);
 
     const stop = useCallback(() => {
@@ -126,13 +128,13 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
                     return read(response.body.getReader());
                 })
-                .catch((error) => {
+                .catch((error: Error) => {
                     updateStream({
                         isFetching: false,
                         isStreaming: false,
                     });
 
-                    if (error?.name === "AbortError") {
+                    if (error.name === "AbortError") {
                         options.onCancel?.();
                     } else {
                         options.onError?.(error);
