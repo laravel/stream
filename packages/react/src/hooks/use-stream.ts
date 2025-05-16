@@ -90,14 +90,16 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
     const makeRequest = useCallback(
         (body: Record<string, any> = {}) => {
+            const controller = new AbortController();
+
             updateStream({
                 isFetching: true,
-                controller: new AbortController(),
+                controller,
             });
 
             fetch(url, {
                 method: "POST",
-                signal: stream.current.controller.signal,
+                signal: controller.signal,
                 headers: {
                     ...headers.current,
                     ...(options.headers ?? {}),
@@ -182,11 +184,15 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     );
 
     useEffect(() => {
-        const stopListening = addListener(id.current, (stream: StreamMeta) => {
-            setIsLoading(stream.isFetching);
-            setIsStreaming(stream.isStreaming);
-            setData(stream.data);
-        });
+        const stopListening = addListener(
+            id.current,
+            (streamUpdate: StreamMeta) => {
+                stream.current = resolveStream(id.current);
+                setIsLoading(streamUpdate.isFetching);
+                setIsStreaming(streamUpdate.isStreaming);
+                setData(streamUpdate.data);
+            },
+        );
 
         return () => {
             stopListening();
@@ -205,8 +211,8 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
     return {
         data,
-        loading: isLoading,
-        streaming: isStreaming,
+        isLoading,
+        isStreaming,
         id: id.current,
         send,
         stop,

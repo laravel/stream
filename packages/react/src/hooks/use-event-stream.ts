@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { EventStreamOptions, EventStreamResponse } from "../types";
+import { EventStreamOptions, EventStreamResult } from "../types";
 
 const dataPrefix = "data: ";
 
@@ -24,7 +24,7 @@ export const useEventStream = (
         onComplete = () => null,
         onError = () => null,
     }: EventStreamOptions = {},
-): EventStreamResponse => {
+): EventStreamResult => {
     const sourceRef = useRef<EventSource | null>(null);
     const messagePartsRef = useRef<string[]>([]);
     const eventNames = useMemo(
