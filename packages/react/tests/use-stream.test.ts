@@ -80,6 +80,7 @@ describe("useStream", () => {
     it("can send data back to the endpoint", async () => {
         const payload = { test: "data" };
         let capturedBody: any;
+        const onCancel = vi.fn();
 
         server.use(
             http.post(url, async ({ request }) => {
@@ -88,7 +89,7 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url));
+        const { result } = renderHook(() => useStream(url, { onCancel }));
 
         act(() => {
             result.current.send(payload);
@@ -100,6 +101,68 @@ describe("useStream", () => {
         expect(capturedBody).toEqual(payload);
         expect(result.current.data).toBe("chunk1chunk2");
         expect(result.current.isStreaming).toBe(false);
+        expect(onCancel).not.toHaveBeenCalled();
+    });
+
+    it("will trigger the onResponse callback", async () => {
+        const payload = { test: "data" };
+        const onResponse = vi.fn();
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onResponse,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onResponse).toHaveBeenCalled();
+    });
+
+    it("will trigger the onFinish callback", async () => {
+        const payload = { test: "data" };
+        const onFinish = vi.fn();
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onFinish,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onFinish).toHaveBeenCalled();
+    });
+
+    it("will trigger the onData callback", async () => {
+        const payload = { test: "data" };
+        const onData = vi.fn();
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onData,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onData).toHaveBeenCalledWith("chunk1");
+        expect(onData).toHaveBeenCalledWith("chunk2");
     });
 
     it("should handle errors correctly", async () => {
@@ -158,7 +221,8 @@ describe("useStream", () => {
     });
 
     it("should stop streaming when stop is called", async () => {
-        const { result } = renderHook(() => useStream(url));
+        const onCancel = vi.fn();
+        const { result } = renderHook(() => useStream(url, { onCancel }));
 
         act(() => {
             result.current.send({ test: "data" });
@@ -172,6 +236,7 @@ describe("useStream", () => {
 
         expect(result.current.isStreaming).toBe(false);
         expect(result.current.data).toBe("chunk1");
+        expect(onCancel).toHaveBeenCalled();
     });
 
     it("should handle custom headers", async () => {
@@ -254,5 +319,43 @@ describe("useStream", () => {
 
         expect(capturedHeaders.get("X-CSRF-TOKEN")).toBe(csrfToken);
         expect(capturedHeaders.get("Content-Type")).toBe("application/json");
+    });
+
+    it("will generate unique ids for streams", async () => {
+        const { result } = renderHook(() => useStream(url));
+
+        const { result: result2 } = renderHook(() => useStream(url));
+
+        expect(result.current.id).toBeTypeOf("string");
+        expect(result2.current.id).toBeTypeOf("string");
+        expect(result.current.id).not.toBe(result2.current.id);
+    });
+
+    it("will sync streams with the same id", async () => {
+        const payload = { test: "data" };
+        const id = "test-stream-id";
+
+        const { result } = renderHook(() => useStream(url, { id }));
+
+        const { result: result2 } = renderHook(() => useStream(url, { id }));
+
+        await act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result2.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.data).toBe("chunk1"));
+        await waitFor(() => expect(result2.current.data).toBe("chunk1"));
+        await waitFor(() => expect(result.current.data).toBe("chunk1chunk2"));
+        await waitFor(() => expect(result2.current.data).toBe("chunk1chunk2"));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+        await waitFor(() => expect(result2.current.isStreaming).toBe(false));
+
+        expect(result.current.isStreaming).toBe(false);
+        expect(result2.current.isStreaming).toBe(false);
+
+        expect(result.current.data).toBe("chunk1chunk2");
+        expect(result2.current.data).toBe("chunk1chunk2");
     });
 });

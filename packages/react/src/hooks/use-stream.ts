@@ -84,11 +84,15 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const stop = useCallback(() => {
         stream.current.controller.abort();
 
+        if (isFetching || isStreaming) {
+            options.onCancel?.();
+        }
+
         updateStream({
             isFetching: false,
             isStreaming: false,
         });
-    }, []);
+    }, [isFetching, isStreaming]);
 
     const makeRequest = useCallback(
         (body: Record<string, any> = {}) => {
@@ -135,12 +139,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
                         isStreaming: false,
                     });
 
-                    if (error.name === "AbortError") {
-                        options.onCancel?.();
-                    } else {
-                        options.onError?.(error);
-                    }
-
+                    options.onError?.(error);
                     options.onFinish?.();
                 });
         },
@@ -161,9 +160,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
             str = "",
         ): Promise<string> => {
             return reader.read().then(({ done, value }) => {
-                const newData = str + new TextDecoder().decode(value);
+                const incomingStr = new TextDecoder("utf-8").decode(value);
+                const newData = str + incomingStr;
 
-                options.onData?.(str);
+                options.onData?.(incomingStr);
 
                 if (done) {
                     updateStream({
