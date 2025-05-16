@@ -29,5 +29,8 @@
     },
     "devDependencies": {
         "prettier": "^3.5.3"
+    },
+    "dependencies": {
+        "nanoid": "^5.1.5"
     }
 }
