@@ -65,7 +65,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     );
 
     const [data, setData] = useState<string>(stream.current.data);
-    const [isLoading, setIsLoading] = useState(stream.current.isFetching);
+    const [isFetching, setIsFetching] = useState(stream.current.isFetching);
     const [isStreaming, setIsStreaming] = useState(stream.current.isStreaming);
 
     const updateStream = useCallback((params: Partial<StreamMeta>) => {
@@ -108,9 +108,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
                 },
                 body: JSON.stringify(body),
             })
-                .then((response) => {
+                .then(async (response) => {
                     if (!response.ok) {
-                        throw new Error("Network response was not ok");
+                        const error = await response.text();
+                        throw new Error(error);
                     }
 
                     if (!response.body) {
@@ -190,7 +191,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
             id.current,
             (streamUpdate: StreamMeta) => {
                 stream.current = resolveStream(id.current);
-                setIsLoading(streamUpdate.isFetching);
+                setIsFetching(streamUpdate.isFetching);
                 setIsStreaming(streamUpdate.isStreaming);
                 setData(streamUpdate.data);
             },
@@ -213,7 +214,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
     return {
         data,
-        isLoading,
+        isFetching,
         isStreaming,
         id: id.current,
         send,
