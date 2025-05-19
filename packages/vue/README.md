@@ -17,6 +17,9 @@ npm install @laravel/stream-vue
 
 ## Streaming Responses
 
+> [!IMPORTANT]
+> The `useStream` hook is currently in Beta, the API is subject to change prior to the v1.0.0 release. All notable changes will be documented in the [changelog](./CHANGELOG.md).
+
 The `useStream` hook allows you to seamlessly consume [streamed responses](https://laravel.com/docs/responses#streamed-responses) in your Vue application.
 
 Provide your stream URL and the hook will automatically update `data` with the concatenated response as data is returned from your server:
