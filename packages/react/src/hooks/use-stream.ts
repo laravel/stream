@@ -48,6 +48,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         (() => {
             const headers: HeadersInit = {
                 "Content-Type": "application/json",
+                "X-STREAM-ID": id.current,
             };
 
             const csrfToken =
@@ -81,7 +82,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
             ?.forEach((listener) => listener(updatedStream));
     }, []);
 
-    const stop = useCallback(() => {
+    const cancel = useCallback(() => {
         stream.current.controller.abort();
 
         if (isFetching || isStreaming) {
@@ -147,7 +148,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     );
 
     const send = useCallback((body: Record<string, any>) => {
-        stop();
+        cancel();
         makeRequest(body);
         updateStream({
             data: "",
@@ -203,8 +204,12 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     }, []);
 
     useEffect(() => {
-        window.addEventListener("beforeunload", stop);
-    }, [stop]);
+        window.addEventListener("beforeunload", cancel);
+
+        return () => {
+            window.removeEventListener("beforeunload", cancel);
+        };
+    }, [cancel]);
 
     useEffect(() => {
         if (options.initialInput) {
@@ -218,8 +223,6 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         isStreaming,
         id: id.current,
         send,
-        stop,
+        cancel,
     };
 };
-
-export default useStream;

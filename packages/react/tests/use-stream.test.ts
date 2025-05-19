@@ -230,7 +230,7 @@ describe("useStream", () => {
 
         await waitFor(() => expect(result.current.data).toBe("chunk1"));
         act(() => {
-            result.current.stop();
+            result.current.cancel();
         });
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
@@ -272,7 +272,6 @@ describe("useStream", () => {
         metaTag.setAttribute("name", "csrf-token");
         metaTag.setAttribute("content", csrfToken);
         document.head.appendChild(metaTag);
-
         let capturedHeaders: any;
 
         server.use(
@@ -298,7 +297,6 @@ describe("useStream", () => {
 
     it("should handle CSRF token from passed option", async () => {
         const csrfToken = "test-csrf-token";
-
         let capturedHeaders: any;
 
         server.use(
@@ -323,7 +321,6 @@ describe("useStream", () => {
 
     it("will generate unique ids for streams", async () => {
         const { result } = renderHook(() => useStream(url));
-
         const { result: result2 } = renderHook(() => useStream(url));
 
         expect(result.current.id).toBeTypeOf("string");
@@ -334,9 +331,16 @@ describe("useStream", () => {
     it("will sync streams with the same id", async () => {
         const payload = { test: "data" };
         const id = "test-stream-id";
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
 
         const { result } = renderHook(() => useStream(url, { id }));
-
         const { result: result2 } = renderHook(() => useStream(url, { id }));
 
         await act(() => {
@@ -357,5 +361,7 @@ describe("useStream", () => {
 
         expect(result.current.data).toBe("chunk1chunk2");
         expect(result2.current.data).toBe("chunk1chunk2");
+
+        expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
     });
 });

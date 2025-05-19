@@ -1,5 +1,5 @@
 import { onMounted, onUnmounted, readonly, ref, watch } from "vue";
-import { Options, StreamResult } from "../types";
+import { EventStreamOptions, EventStreamResult } from "../types";
 
 const dataPrefix = "data: ";
 
@@ -23,8 +23,8 @@ export const useEventStream = (
         onMessage = () => null,
         onComplete = () => null,
         onError = () => null,
-    }: Options = {},
-): StreamResult => {
+    }: EventStreamOptions = {},
+): EventStreamResult => {
     const message = ref("");
     const messageParts = ref<string[]>([]);
     const eventNames = Array.isArray(eventName) ? eventName : [eventName];

@@ -1,134 +1,210 @@
-import { onMounted, onUnmounted, readonly, ref, watch } from "vue";
+import { nanoid } from "nanoid";
+import { onMounted, onUnmounted, readonly, ref } from "vue";
+import { StreamListenerCallback, StreamMeta, StreamOptions } from "../types";
 
-interface StreamOptions {
-    method?: "GET" | "POST" | "PUT" | "DELETE";
-    headers?: HeadersInit;
-    body?: BodyInit;
-    onMessage?: (data: any) => void;
-    onComplete?: () => void;
-    onError?: (error: any) => void;
-}
+const streams = new Map<string, StreamMeta>();
+const listeners = new Map<string, StreamListenerCallback[]>();
 
-interface StreamResult {
-    data: Readonly<typeof ref>;
-    close: () => void;
-    clearData: () => void;
-}
+const resolveStream = (id: string): StreamMeta => {
+    const stream = streams.get(id);
 
-/**
- * Composable for handling fetch-based streams
- *
- * @param url - The URL to fetch from
- * @param options - Options for the stream including fetch options and callbacks
- *
- * @returns StreamResult object containing the stream data and control functions
- */
-export const useStream = (
-    url: string,
-    {
-        method = "GET",
-        headers = {},
-        body,
-        onMessage = () => null,
-        onComplete = () => null,
-        onError = () => null,
-    }: StreamOptions = {},
-): StreamResult => {
-    const data = ref<any>(null);
-    let controller: AbortController | null = null;
-    let reader: ReadableStreamDefaultReader | null = null;
+    if (stream) {
+        return stream;
+    }
 
-    const resetData = () => {
-        data.value = null;
-    };
-
-    const closeConnection = (reset: boolean = false) => {
-        reader?.cancel();
-        controller?.abort();
-        reader = null;
-        controller = null;
-
-        if (reset) {
-            resetData();
-        }
-    };
-
-    const setupConnection = async () => {
-        resetData();
-        controller = new AbortController();
-
-        console.log("Setting up connection to:", url);
-
-        try {
-            const response = await fetch(url, {
-                method,
-                headers,
-                body,
-                signal: controller.signal,
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            if (!response.body) {
-                throw new Error("ReadableStream not supported");
-            }
-
-            reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-
-                if (done) {
-                    onComplete();
-                    break;
-                }
-
-                const chunk = decoder.decode(value, { stream: true });
-                try {
-                    const parsedData = JSON.parse(chunk);
-                    data.value = parsedData;
-                    onMessage(parsedData);
-                } catch {
-                    data.value = chunk;
-                    onMessage(chunk);
-                }
-            }
-        } catch (error: unknown) {
-            if (error instanceof Error && error.name === "AbortError") {
-                return;
-            }
-            onError(error);
-        } finally {
-            closeConnection();
-        }
-    };
-
-    onMounted(() => {
-        void setupConnection();
+    streams.set(id, {
+        controller: new AbortController(),
+        data: "",
+        isFetching: false,
+        isStreaming: false,
     });
 
-    onUnmounted(() => {
-        closeConnection();
-    });
+    return streams.get(id)!;
+};
 
-    watch(
-        () => url,
-        (newUrl: string, oldUrl: string) => {
-            if (newUrl !== oldUrl) {
-                closeConnection();
-                void setupConnection();
-            }
-        },
-    );
+const resolveListener = (id: string) => {
+    if (!listeners.has(id)) {
+        listeners.set(id, []);
+    }
 
-    return {
-        data: readonly(data),
-        close: closeConnection,
-        clearData: resetData,
+    return listeners.get(id)!;
+};
+
+const addListener = (id: string, listener: StreamListenerCallback) => {
+    resolveListener(id).push(listener);
+
+    return () => {
+        listeners.set(
+            id,
+            resolveListener(id).filter((l) => l !== listener),
+        );
     };
 };
 
-export default useStream;
+export const useStream = (url: string, options: StreamOptions = {}) => {
+    const id = options.id ?? nanoid();
+    const stream = ref<StreamMeta>(resolveStream(id));
+    const headers = (() => {
+        const headers: HeadersInit = {
+            "Content-Type": "application/json",
+            "X-STREAM-ID": id,
+        };
+
+        const csrfToken =
+            options.csrfToken ??
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute("content");
+
+        if (csrfToken) {
+            headers["X-CSRF-TOKEN"] = csrfToken;
+        }
+
+        return headers;
+    })();
+
+    const data = ref<string>(stream.value.data);
+    const isFetching = ref(stream.value.isFetching);
+    const isStreaming = ref(stream.value.isStreaming);
+
+    let stopListening: () => void;
+
+    const updateStream = (params: Partial<StreamMeta>) => {
+        streams.set(id, {
+            ...resolveStream(id),
+            ...params,
+        });
+
+        const updatedStream = resolveStream(id);
+
+        listeners.get(id)?.forEach((listener) => listener(updatedStream));
+    };
+
+    const cancel = () => {
+        stream.value.controller.abort();
+
+        if (isFetching || isStreaming) {
+            options.onCancel?.();
+        }
+
+        updateStream({
+            isFetching: false,
+            isStreaming: false,
+        });
+    };
+
+    const makeRequest = (body: Record<string, any> = {}) => {
+        const controller = new AbortController();
+
+        updateStream({
+            isFetching: true,
+            controller,
+        });
+
+        fetch(url, {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+                ...headers,
+                ...(options.headers ?? {}),
+            },
+            body: JSON.stringify(body),
+        })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+
+                if (!response.body) {
+                    throw new Error(
+                        "ReadableStream not yet supported in this browser.",
+                    );
+                }
+
+                options.onResponse?.(response);
+
+                updateStream({
+                    isFetching: false,
+                    isStreaming: true,
+                });
+
+                return read(response.body.getReader());
+            })
+            .catch((error: Error) => {
+                updateStream({
+                    isFetching: false,
+                    isStreaming: false,
+                });
+
+                options.onError?.(error);
+                options.onFinish?.();
+            });
+    };
+
+    const send = (body: Record<string, any>) => {
+        cancel();
+        makeRequest(body);
+        updateStream({
+            data: "",
+        });
+    };
+
+    const read = (
+        reader: ReadableStreamDefaultReader<AllowSharedBufferSource>,
+        str = "",
+    ): Promise<string> => {
+        return reader.read().then(({ done, value }) => {
+            const incomingStr = new TextDecoder("utf-8").decode(value);
+            const newData = str + incomingStr;
+
+            options.onData?.(incomingStr);
+
+            if (done) {
+                updateStream({
+                    data: newData,
+                    isStreaming: false,
+                });
+
+                options.onFinish?.();
+
+                return "";
+            }
+
+            updateStream({
+                data: newData,
+            });
+
+            return read(reader, newData);
+        });
+    };
+
+    onMounted(() => {
+        stopListening = addListener(id, (streamUpdate: StreamMeta) => {
+            stream.value = resolveStream(id);
+            isFetching.value = streamUpdate.isFetching;
+            isStreaming.value = streamUpdate.isStreaming;
+            data.value = streamUpdate.data;
+        });
+
+        window.addEventListener("beforeunload", cancel);
+
+        if (options.initialInput) {
+            makeRequest(options.initialInput);
+        }
+    });
+
+    onUnmounted(() => {
+        stopListening();
+        window.removeEventListener("beforeunload", cancel);
+    });
+
+    return {
+        data: readonly(data),
+        isFetching: readonly(isFetching),
+        isStreaming: readonly(isStreaming),
+        id,
+        send,
+        cancel,
+    };
+};
