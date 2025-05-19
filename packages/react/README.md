@@ -7,7 +7,7 @@
 <a href="https://www.npmjs.com/package/@laravel/stream-react"><img src="https://img.shields.io/npm/l/@laravel/stream-react" alt="License"></a>
 </p>
 
-Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React application.
+Easily consume streams in your React application.
 
 ## Installation
 
@@ -15,9 +15,140 @@ Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#eve
 npm install @laravel/stream-react
 ```
 
-## Usage
+## Streaming Responses
 
-Provide your stream URL and the hook will automatically update the `message` with the concatenated response as messages are returned from your server:
+> [!IMPORTANT]
+> The `useStream` hook is currently in Beta, the API is subject to change prior to the v1.0.0 release. All notable changes will be documented in the [changelog](./CHANGELOG.md).
+
+The `useStream` hook allows you to seamlessly consume [streamed responses](https://laravel.com/docs/responses#streamed-responses) in your React application.
+
+Provide your stream URL and the hook will automatically update `data` with the concatenated response as data is returned from your server:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+
+function App() {
+    const { data, isFetching, isStreaming, send } = useStream("chat");
+
+    const sendMessage = () => {
+        send({
+            message: `Current timestamp: ${Date.now()}`,
+        });
+    };
+
+    return (
+        <div>
+            <div>{data}</div>
+            {isFetching && <div>Connecting...</div>}
+            {isStreaming && <div>Generating...</div>}
+            <button onClick={sendMessage}>Send Message</button>
+        </div>
+    );
+}
+```
+
+When sending data back to the stream, the active connection to the stream is canceled before sending the new data. All requests are sent as JSON `POST` requests.
+
+The second argument given to `useStream` is an options object that you may use to customize the stream consumption behavior. The default values for this object are shown below:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+
+function App() {
+    const { data } = useStream("chat", {
+        id: undefined,
+        initialInput: undefined,
+        headers: undefined,
+        csrfToken: undefined,
+        onResponse: (response: Response) => void,
+        onData: (data: string) => void,
+        onCancel: () => void,
+        onFinish: () => void,
+        onError: (error: Error) => void,
+    });
+
+    return <div>{data}</div>;
+}
+```
+
+`onResponse` is triggered after a successful initial response from the stream and the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) is passed to the callback.
+
+`onData` is called as each chunk is received, the current chunk is passed to the callback.
+
+`onFinish` is called when a stream has finished and when an error is thrown during the fetch/read cycle.
+
+By default, a request is not made the to stream on initialization. You may pass an initial payload to the stream by using the `initialInput` option:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+
+function App() {
+    const { data } = useStream("chat", {
+        initialInput: {
+            message: "Introduce yourself.",
+        },
+    });
+
+    return <div>{data}</div>;
+}
+```
+
+To cancel a stream manually, you may use the `cancel` method returned from the hook:
+
+```tsx
+import { useStream } from "@laravel/stream-react";
+
+function App() {
+    const { data, cancel } = useStream("chat");
+
+    return (
+        <div>
+            <div>{data}</div>
+            <button onClick={cancel}>Cancel</button>
+        </div>
+    );
+}
+```
+
+Each time the `useStream` hook is used, a random `id` is generated to identify the stream. This is sent back to the server with each request in the `X-STREAM-ID` header.
+
+When consuming the same stream from multiple components, you can read and write to the stream by providing your own `id`:
+
+```tsx
+// App.tsx
+import { useStream } from "@laravel/stream-react";
+
+function App() {
+    const { data, id } = useStream("chat");
+
+    return (
+        <div>
+            <div>{data}</div>
+            <StreamStatus id={id} />
+        </div>
+    );
+}
+
+// StreamStatus.tsx
+import { useStream } from "@laravel/stream-react";
+
+function StreamStatus({ id }) {
+    const { isFetching, isStreaming } = useStream("chat", { id });
+
+    return (
+        <div>
+            {isFetching && <div>Connecting...</div>}
+            {isStreaming && <div>Generating...</div>}
+        </div>
+    );
+}
+```
+
+## Event Streams (SSE)
+
+The `useEventStream` hook allows you to seamlessly consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React application.
+
+Provide your stream URL and the hook will automatically update `message` with the concatenated response as messages are returned from your server:
 
 ```tsx
 import { useEventStream } from "@laravel/stream-react";

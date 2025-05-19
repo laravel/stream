@@ -8,6 +8,6 @@
         "outDir": "./dist",
         "strict": true
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "tests/use-stream.test.ts"],
     "exclude": ["node_modules", "dist"]
 }
