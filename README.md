@@ -4,7 +4,7 @@
 <a href="https://github.com/laravel/stream/actions/workflows/tests.yml"><img src="https://github.com/laravel/stream/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
 </p>
 
-Easily consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React and Vue applications.
+Easily streams in your React and Vue applications.
 
 This monorepo contains two packages:
 
