@@ -18,7 +18,7 @@ npm install @laravel/stream-react
 ## Streaming Responses
 
 > [!IMPORTANT]
-> The `useStream` hook is currently in Beta, the API is subject to change prior to the v1.0.0 release. All notable changes will be documented in the [changelog](./CHANGELOG.md).
+> The `useStream` hook is currently in Beta, the API is subject to change prior to the v1.0.0 release. All notable changes will be documented in the [changelog](./../../CHANGELOG.md).
 
 The `useStream` hook allows you to seamlessly consume [streamed responses](https://laravel.com/docs/responses#streamed-responses) in your React application.
 
