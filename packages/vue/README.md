@@ -155,6 +155,39 @@ const { isFetching, isStreaming } = useStream("chat", { id: props.id });
 </template>
 ```
 
+The `useJsonStream` hook is identical to the `useStream` hook except that it will attempt to parse the data as JSON once it has finished streaming:
+
+```vue
+<script setup lang="ts">
+import { useJsonStream } from "@laravel/stream-vue";
+
+type User = {
+    id: number;
+    name: string;
+    email: string;
+};
+
+const { data, send } = useJsonStream<{ users: User[] }>("users");
+
+const loadUsers = () => {
+    send({
+        query: "taylor",
+    });
+};
+</script>
+
+<template>
+    <div>
+        <ul>
+            <li v-for="user in data?.users" :key="user.id">
+                {{ user.id }}: {{ user.name }}
+            </li>
+        </ul>
+        <button @click="loadUsers">Load Users</button>
+    </div>
+</template>
+```
+
 ## Event Streams (SSE)
 
 The `useEventStream` hook allows you to seamlessly consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your Vue application.
