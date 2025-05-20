@@ -1,2 +1,2 @@
 export { useEventStream } from "./composables/useEventStream";
-export { useStream } from "./composables/useStream";
+export { useJsonStream, useStream } from "./composables/useStream";

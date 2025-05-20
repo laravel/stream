@@ -2,24 +2,27 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { StreamListenerCallback, StreamMeta, StreamOptions } from "../types";
 
-const streams = new Map<string, StreamMeta>();
+const streams = new Map<string, StreamMeta<unknown>>();
 const listeners = new Map<string, StreamListenerCallback[]>();
 
-const resolveStream = (id: string): StreamMeta => {
-    const stream = streams.get(id);
+const resolveStream = <TJsonData = null>(id: string): StreamMeta<TJsonData> => {
+    const stream = streams.get(id) as StreamMeta<TJsonData> | undefined;
 
     if (stream) {
         return stream;
     }
 
-    streams.set(id, {
+    const newStream: StreamMeta<TJsonData> = {
         controller: new AbortController(),
         data: "",
         isFetching: false,
         isStreaming: false,
-    });
+        jsonData: null as TJsonData,
+    };
 
-    return streams.get(id)!;
+    streams.set(id, newStream);
+
+    return newStream;
 };
 
 const resolveListener = (id: string) => {
@@ -50,9 +53,12 @@ const addListener = (id: string, listener: StreamListenerCallback) => {
     };
 };
 
-export const useStream = (url: string, options: StreamOptions = {}) => {
+export const useStream = <TJsonData = null>(
+    url: string,
+    options: StreamOptions = {},
+) => {
     const id = useRef<string>(options.id ?? nanoid());
-    const stream = useRef(resolveStream(id.current));
+    const stream = useRef(resolveStream<TJsonData>(id.current));
     const headers = useRef<HeadersInit>(
         (() => {
             const headers: HeadersInit = {
@@ -75,21 +81,27 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     );
 
     const [data, setData] = useState<string>(stream.current.data);
+    const [jsonData, setJsonData] = useState<TJsonData | null>(
+        stream.current.jsonData,
+    );
     const [isFetching, setIsFetching] = useState(stream.current.isFetching);
     const [isStreaming, setIsStreaming] = useState(stream.current.isStreaming);
 
-    const updateStream = useCallback((params: Partial<StreamMeta>) => {
-        streams.set(id.current, {
-            ...resolveStream(id.current),
-            ...params,
-        });
+    const updateStream = useCallback(
+        (params: Partial<StreamMeta<TJsonData>>) => {
+            streams.set(id.current, {
+                ...resolveStream(id.current),
+                ...params,
+            });
 
-        const updatedStream = resolveStream(id.current);
+            const updatedStream = resolveStream(id.current);
 
-        listeners
-            .get(id.current)
-            ?.forEach((listener) => listener(updatedStream));
-    }, []);
+            listeners
+                .get(id.current)
+                ?.forEach((listener) => listener(updatedStream));
+        },
+        [],
+    );
 
     const cancel = useCallback(() => {
         stream.current.controller.abort();
@@ -107,6 +119,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const clearData = useCallback(() => {
         updateStream({
             data: "",
+            jsonData: null,
         });
     }, []);
 
@@ -179,22 +192,33 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
                 options.onData?.(incomingStr);
 
-                if (done) {
-                    updateStream({
-                        data: newData,
-                        isStreaming: false,
-                    });
+                const streamParams: Partial<StreamMeta<TJsonData>> = {
+                    data: newData,
+                };
 
-                    options.onFinish?.();
+                if (!done) {
+                    updateStream(streamParams);
 
-                    return "";
+                    return read(reader, newData);
                 }
 
-                updateStream({
-                    data: newData,
-                });
+                streamParams.isStreaming = false;
 
-                return read(reader, newData);
+                if (options.json) {
+                    try {
+                        streamParams.jsonData = JSON.parse(
+                            newData,
+                        ) as TJsonData;
+                    } catch (error) {
+                        options.onError?.(error as Error);
+                    }
+                }
+
+                updateStream(streamParams);
+
+                options.onFinish?.();
+
+                return "";
             });
         },
         [],
@@ -208,6 +232,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
                 setIsFetching(streamUpdate.isFetching);
                 setIsStreaming(streamUpdate.isStreaming);
                 setData(streamUpdate.data);
+                setJsonData(streamUpdate.jsonData);
             },
         );
 
@@ -236,6 +261,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
     return {
         data,
+        jsonData,
         isFetching,
         isStreaming,
         id: id.current,
@@ -243,4 +269,16 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         cancel,
         clearData,
     };
+};
+
+export const useJsonStream = <TJsonData = null>(
+    url: string,
+    options: Omit<StreamOptions, "json"> = {},
+) => {
+    const { jsonData, data, ...rest } = useStream<TJsonData>(url, {
+        ...options,
+        json: true,
+    });
+
+    return { data: jsonData, rawData: data, ...rest };
 };

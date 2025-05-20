@@ -10,7 +10,7 @@ import {
     vi,
 } from "vitest";
 import { createApp } from "vue";
-import { useStream } from "../src/composables/useStream";
+import { useJsonStream, useStream } from "../src/composables/useStream";
 
 function withSetup(composable) {
     let result;
@@ -284,5 +284,175 @@ describe("useStream", () => {
         expect(result2.data.value).toBe("chunk1chunk2");
 
         expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
+    });
+
+    it("parses JSON data when json option is true", async () => {
+        const jsonData = { test: "data", value: 123 };
+
+        server.use(
+            http.post(url, async () => {
+                await delay(20);
+
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('{"test":"data",'),
+                            );
+
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('"value":123}'),
+                            );
+
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const [result] = withSetup(() => useStream(url, { json: true }));
+
+        result.send({});
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(result.data.value).toBe(JSON.stringify(jsonData));
+        expect(result.jsonData.value).toEqual(jsonData);
+    });
+
+    it("handles JSON parsing errors", async () => {
+        const invalidJson = "{invalid json}";
+        const onError = vi.fn();
+
+        server.use(
+            http.post(url, async () => {
+                await delay(50);
+
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(50);
+                            controller.enqueue(
+                                new TextEncoder().encode(invalidJson),
+                            );
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const [result] = withSetup(() =>
+            useStream(url, { json: true, onError }),
+        );
+
+        result.send({});
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(onError).toHaveBeenCalled();
+        expect(result.data.value).toBe(invalidJson);
+        expect(result.jsonData.value).toBeNull();
+    });
+
+    it("parses JSON data when json option is true (useJsonStream)", async () => {
+        const jsonData = { test: "data", value: 123 };
+
+        server.use(
+            http.post(url, async () => {
+                await delay(20);
+
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('{"test":"data",'),
+                            );
+
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('"value":123}'),
+                            );
+
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const [result] = withSetup(() => useJsonStream(url));
+
+        result.send({});
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(result.data.value).toEqual(jsonData);
+        expect(result.rawData.value).toBe(JSON.stringify(jsonData));
+    });
+
+    it("handles JSON parsing errors (useJsonStream)", async () => {
+        const invalidJson = "{invalid json}";
+        const onError = vi.fn();
+
+        server.use(
+            http.post(url, async () => {
+                await delay(50);
+
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(50);
+                            controller.enqueue(
+                                new TextEncoder().encode(invalidJson),
+                            );
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const [result] = withSetup(() => useJsonStream(url, { onError }));
+
+        result.send({});
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(onError).toHaveBeenCalled();
+        expect(result.data.value).toBeNull();
+        expect(result.rawData.value).toBe(invalidJson);
     });
 });

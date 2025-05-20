@@ -20,6 +20,7 @@ export type StreamOptions = {
     initialInput?: Record<string, any>;
     headers?: Record<string, string>;
     csrfToken?: string;
+    json?: boolean;
     onResponse?: (response: Response) => void;
     onData?: (data: string) => void;
     onCancel?: () => void;
@@ -27,11 +28,12 @@ export type StreamOptions = {
     onError?: (error: Error) => void;
 };
 
-export type StreamMeta = {
+export type StreamMeta<TJsonData = null> = {
     controller: AbortController;
     data: string;
     isFetching: boolean;
     isStreaming: boolean;
+    jsonData: TJsonData | null;
 };
 
 export type StreamListenerCallback = (stream: StreamMeta) => void;

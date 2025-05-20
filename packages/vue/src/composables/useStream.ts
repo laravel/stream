@@ -2,24 +2,27 @@ import { nanoid } from "nanoid";
 import { onMounted, onUnmounted, readonly, ref } from "vue";
 import { StreamListenerCallback, StreamMeta, StreamOptions } from "../types";
 
-const streams = new Map<string, StreamMeta>();
+const streams = new Map<string, StreamMeta<unknown>>();
 const listeners = new Map<string, StreamListenerCallback[]>();
 
-const resolveStream = (id: string): StreamMeta => {
-    const stream = streams.get(id);
+const resolveStream = <TJsonData = null>(id: string): StreamMeta<TJsonData> => {
+    const stream = streams.get(id) as StreamMeta<TJsonData> | undefined;
 
     if (stream) {
         return stream;
     }
 
-    streams.set(id, {
+    const newStream = {
         controller: new AbortController(),
         data: "",
         isFetching: false,
         isStreaming: false,
-    });
+        jsonData: null as TJsonData,
+    };
 
-    return streams.get(id)!;
+    streams.set(id, newStream);
+
+    return newStream;
 };
 
 const resolveListener = (id: string) => {
@@ -50,9 +53,21 @@ const addListener = (id: string, listener: StreamListenerCallback) => {
     };
 };
 
-export const useStream = (url: string, options: StreamOptions = {}) => {
+export const useStream = <TJsonData = null>(
+    url: string,
+    options: StreamOptions = {},
+): {
+    data: ReturnType<typeof readonly>;
+    jsonData: ReturnType<typeof readonly>;
+    isFetching: ReturnType<typeof readonly>;
+    isStreaming: ReturnType<typeof readonly>;
+    id: string;
+    send: (body: Record<string, any>) => void;
+    cancel: () => void;
+    clearData: () => void;
+} => {
     const id = options.id ?? nanoid();
-    const stream = ref<StreamMeta>(resolveStream(id));
+    const stream = ref<StreamMeta<TJsonData>>(resolveStream<TJsonData>(id));
     const headers = (() => {
         const headers: HeadersInit = {
             "Content-Type": "application/json",
@@ -72,13 +87,14 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         return headers;
     })();
 
-    const data = ref<string>(stream.value.data);
+    const data = ref(stream.value.data);
+    const jsonData = ref(stream.value.jsonData);
     const isFetching = ref(stream.value.isFetching);
     const isStreaming = ref(stream.value.isStreaming);
 
     let stopListening: () => void;
 
-    const updateStream = (params: Partial<StreamMeta>) => {
+    const updateStream = (params: Partial<StreamMeta<TJsonData>>) => {
         streams.set(id, {
             ...resolveStream(id),
             ...params,
@@ -160,6 +176,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const clearData = () => {
         updateStream({
             data: "",
+            jsonData: null,
         });
     };
 
@@ -173,31 +190,41 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
             options.onData?.(incomingStr);
 
-            if (done) {
-                updateStream({
-                    data: newData,
-                    isStreaming: false,
-                });
+            const streamParams: Partial<StreamMeta<TJsonData>> = {
+                data: newData,
+            };
 
-                options.onFinish?.();
+            if (!done) {
+                updateStream(streamParams);
 
-                return "";
+                return read(reader, newData);
             }
 
-            updateStream({
-                data: newData,
-            });
+            streamParams.isStreaming = false;
 
-            return read(reader, newData);
+            if (options.json) {
+                try {
+                    streamParams.jsonData = JSON.parse(newData) as TJsonData;
+                } catch (error) {
+                    options.onError?.(error as Error);
+                }
+            }
+
+            updateStream(streamParams);
+
+            options.onFinish?.();
+
+            return "";
         });
     };
 
     onMounted(() => {
-        stopListening = addListener(id, (streamUpdate: StreamMeta) => {
-            stream.value = resolveStream(id);
+        stopListening = addListener(id, (streamUpdate) => {
+            stream.value = resolveStream<TJsonData>(id);
             isFetching.value = streamUpdate.isFetching;
             isStreaming.value = streamUpdate.isStreaming;
             data.value = streamUpdate.data;
+            jsonData.value = streamUpdate.jsonData;
         });
 
         window.addEventListener("beforeunload", cancel);
@@ -218,6 +245,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
     return {
         data: readonly(data),
+        jsonData: readonly(jsonData),
         isFetching: readonly(isFetching),
         isStreaming: readonly(isStreaming),
         id,
@@ -225,4 +253,16 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         cancel,
         clearData,
     };
+};
+
+export const useJsonStream = <TJsonData = null>(
+    url: string,
+    options: Omit<StreamOptions, "json"> = {},
+) => {
+    const { jsonData, data, ...rest } = useStream<TJsonData>(url, {
+        ...options,
+        json: true,
+    });
+
+    return { data: jsonData, rawData: data, ...rest };
 };

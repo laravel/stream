@@ -144,6 +144,41 @@ function StreamStatus({ id }) {
 }
 ```
 
+The `useJsonStream` hook is identical to the `useStream` hook except that it will attempt to parse the data as JSON once it has finished streaming:
+
+```tsx
+import { useJsonStream } from "@laravel/stream-react";
+
+type User = {
+    id: number;
+    name: string;
+    email: string;
+};
+
+function App() {
+    const { data, send } = useJsonStream<{ users: User[] }>("users");
+
+    const loadUsers = () => {
+        send({
+            query: "taylor",
+        });
+    };
+
+    return (
+        <div>
+            <ul>
+                {data?.users.map((user) => (
+                    <li>
+                        {user.id}: {user.name}
+                    </li>
+                ))}
+            </ul>
+            <button onClick={loadUsers}>Load Users</button>
+        </div>
+    );
+}
+```
+
 ## Event Streams (SSE)
 
 The `useEventStream` hook allows you to seamlessly consume [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) in your React application.
