@@ -364,4 +364,25 @@ describe("useStream", () => {
 
         expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
     });
+
+    it.skip("should cancel stream when component unmounts", async () => {
+        const onCancel = vi.fn();
+        const { unmount, result } = renderHook(() =>
+            useStream(url, { onCancel }),
+        );
+
+        await act(() => {
+            result.current.send({
+                test: "ok",
+            });
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+
+        unmount();
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onCancel).toHaveBeenCalled();
+    });
 });
