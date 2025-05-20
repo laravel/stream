@@ -75,6 +75,12 @@ describe("useStream", () => {
 
         expect(result.current.isStreaming).toBe(false);
         expect(result.current.data).toBe("chunk1chunk2");
+
+        await act(() => {
+            result.current.clearData();
+        });
+
+        expect(result.current.data).toBe("");
     });
 
     it("can send data back to the endpoint", async () => {
@@ -363,5 +369,26 @@ describe("useStream", () => {
         expect(result2.current.data).toBe("chunk1chunk2");
 
         expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
+    });
+
+    it.skip("should cancel stream when component unmounts", async () => {
+        const onCancel = vi.fn();
+        const { unmount, result } = renderHook(() =>
+            useStream(url, { onCancel }),
+        );
+
+        await act(() => {
+            result.current.send({
+                test: "ok",
+            });
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+
+        unmount();
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onCancel).toHaveBeenCalled();
     });
 });

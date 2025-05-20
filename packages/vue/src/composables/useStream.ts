@@ -30,6 +30,10 @@ const resolveListener = (id: string) => {
     return listeners.get(id)!;
 };
 
+const hasListeners = (id: string) => {
+    return listeners.has(id) && listeners.get(id)?.length;
+};
+
 const addListener = (id: string, listener: StreamListenerCallback) => {
     resolveListener(id).push(listener);
 
@@ -38,6 +42,11 @@ const addListener = (id: string, listener: StreamListenerCallback) => {
             id,
             resolveListener(id).filter((l) => l !== listener),
         );
+
+        if (!hasListeners(id)) {
+            streams.delete(id);
+            listeners.delete(id);
+        }
     };
 };
 
@@ -145,6 +154,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const send = (body: Record<string, any>) => {
         cancel();
         makeRequest(body);
+        clearData();
+    };
+
+    const clearData = () => {
         updateStream({
             data: "",
         });
@@ -197,6 +210,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     onUnmounted(() => {
         stopListening();
         window.removeEventListener("beforeunload", cancel);
+
+        if (!hasListeners(id)) {
+            cancel();
+        }
     });
 
     return {
@@ -206,5 +223,6 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         id,
         send,
         cancel,
+        clearData,
     };
 };

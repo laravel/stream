@@ -87,6 +87,10 @@ describe("useStream", () => {
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
 
         expect(result.data.value).toBe("chunk1chunk2");
+
+        result.clearData();
+
+        expect(result.data.value).toBe("");
     });
 
     it("can send data to the endpoint", async () => {

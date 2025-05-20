@@ -30,6 +30,10 @@ const resolveListener = (id: string) => {
     return listeners.get(id)!;
 };
 
+const hasListeners = (id: string) => {
+    return listeners.has(id) && listeners.get(id)?.length;
+};
+
 const addListener = (id: string, listener: StreamListenerCallback) => {
     resolveListener(id).push(listener);
 
@@ -38,6 +42,11 @@ const addListener = (id: string, listener: StreamListenerCallback) => {
             id,
             resolveListener(id).filter((l) => l !== listener),
         );
+
+        if (!hasListeners(id)) {
+            streams.delete(id);
+            listeners.delete(id);
+        }
     };
 };
 
@@ -95,6 +104,12 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         });
     }, [isFetching, isStreaming]);
 
+    const clearData = useCallback(() => {
+        updateStream({
+            data: "",
+        });
+    }, []);
+
     const makeRequest = useCallback(
         (body: Record<string, any> = {}) => {
             const controller = new AbortController();
@@ -150,9 +165,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const send = useCallback((body: Record<string, any>) => {
         cancel();
         makeRequest(body);
-        updateStream({
-            data: "",
-        });
+        clearData();
     }, []);
 
     const read = useCallback(
@@ -200,6 +213,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
 
         return () => {
             stopListening();
+
+            if (!hasListeners(id.current)) {
+                cancel();
+            }
         };
     }, []);
 
@@ -224,5 +241,6 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         id: id.current,
         send,
         cancel,
+        clearData,
     };
 };
