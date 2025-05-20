@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { onMounted, onUnmounted, readonly, ref } from "vue";
+import { onMounted, onUnmounted, readonly, Ref, ref } from "vue";
 import { StreamListenerCallback, StreamMeta, StreamOptions } from "../types";
 
 const streams = new Map<string, StreamMeta<unknown>>();
@@ -57,10 +57,10 @@ export const useStream = <TJsonData = null>(
     url: string,
     options: StreamOptions = {},
 ): {
-    data: ReturnType<typeof readonly>;
-    jsonData: ReturnType<typeof readonly>;
-    isFetching: ReturnType<typeof readonly>;
-    isStreaming: ReturnType<typeof readonly>;
+    data: Readonly<Ref<string>>;
+    jsonData: Readonly<TJsonData | null>;
+    isFetching: Readonly<Ref<boolean>>;
+    isStreaming: Readonly<Ref<boolean>>;
     id: string;
     send: (body: Record<string, any>) => void;
     cancel: () => void;
@@ -245,7 +245,7 @@ export const useStream = <TJsonData = null>(
 
     return {
         data: readonly(data),
-        jsonData: readonly(jsonData),
+        jsonData: readonly(jsonData) as Readonly<TJsonData | null>,
         isFetching: readonly(isFetching),
         isStreaming: readonly(isStreaming),
         id,
