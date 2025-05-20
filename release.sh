@@ -105,3 +105,8 @@ for package_dir in packages/*; do
 done
 
 echo "Released!"
+
+echo ""
+
+echo "Release on GitHub:"
+echo "https://github.com/laravel/stream/releases/tag/v$new_version"
