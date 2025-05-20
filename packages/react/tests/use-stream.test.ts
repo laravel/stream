@@ -391,4 +391,90 @@ describe("useStream", () => {
 
         expect(onCancel).toHaveBeenCalled();
     });
+
+    it("should parse JSON data when json option is true", async () => {
+        const jsonData = { test: "data", value: 123 };
+        server.use(
+            http.post(url, async () => {
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('{"test":"data",'),
+                            );
+
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode('"value":123}'),
+                            );
+
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const { result } = renderHook(() => useStream(url, { json: true }));
+
+        await act(() => {
+            result.current.send({});
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(result.current.data).toEqual(JSON.stringify(jsonData));
+        expect(result.current.jsonData).toEqual(jsonData);
+    });
+
+    it("should handle JSON parsing errors", async () => {
+        const invalidJson = "{invalid json}";
+        const onError = vi.fn();
+
+        server.use(
+            http.post(url, async () => {
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode(invalidJson),
+                            );
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const { result } = renderHook(() =>
+            useStream(url, { json: true, onError }),
+        );
+
+        await act(() => {
+            result.current.send({});
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onError).toHaveBeenCalled();
+
+        expect(result.current.data).toBe(invalidJson);
+        expect(result.current.jsonData).toBeNull();
+    });
 });
