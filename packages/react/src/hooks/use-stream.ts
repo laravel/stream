@@ -104,6 +104,12 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         });
     }, [isFetching, isStreaming]);
 
+    const clearData = useCallback(() => {
+        updateStream({
+            data: "",
+        });
+    }, []);
+
     const makeRequest = useCallback(
         (body: Record<string, any> = {}) => {
             const controller = new AbortController();
@@ -159,9 +165,7 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const send = useCallback((body: Record<string, any>) => {
         cancel();
         makeRequest(body);
-        updateStream({
-            data: "",
-        });
+        clearData();
     }, []);
 
     const read = useCallback(
@@ -237,5 +241,6 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         id: id.current,
         send,
         cancel,
+        clearData,
     };
 };

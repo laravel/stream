@@ -154,6 +154,10 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
     const send = (body: Record<string, any>) => {
         cancel();
         makeRequest(body);
+        clearData();
+    };
+
+    const clearData = () => {
         updateStream({
             data: "",
         });
@@ -219,5 +223,6 @@ export const useStream = (url: string, options: StreamOptions = {}) => {
         id,
         send,
         cancel,
+        clearData,
     };
 };

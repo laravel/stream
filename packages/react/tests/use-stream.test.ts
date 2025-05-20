@@ -75,6 +75,12 @@ describe("useStream", () => {
 
         expect(result.current.isStreaming).toBe(false);
         expect(result.current.data).toBe("chunk1chunk2");
+
+        await act(() => {
+            result.current.clearData();
+        });
+
+        expect(result.current.data).toBe("");
     });
 
     it("can send data back to the endpoint", async () => {
