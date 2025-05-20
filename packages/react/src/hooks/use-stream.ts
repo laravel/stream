@@ -192,32 +192,33 @@ export const useStream = <TJsonData = null>(
 
                 options.onData?.(incomingStr);
 
-                if (done) {
-                    updateStream({
-                        data: newData,
-                        isStreaming: false,
-                    });
+                const streamParams: Partial<StreamMeta<TJsonData>> = {
+                    data: newData,
+                };
 
-                    options.onFinish?.();
+                if (!done) {
+                    updateStream(streamParams);
 
-                    if (options.json) {
-                        try {
-                            updateStream({
-                                jsonData: JSON.parse(newData) as TJsonData,
-                            });
-                        } catch (error) {
-                            options.onError?.(error as Error);
-                        }
-                    }
-
-                    return "";
+                    return read(reader, newData);
                 }
 
-                updateStream({
-                    data: newData,
-                });
+                streamParams.isStreaming = false;
 
-                return read(reader, newData);
+                if (options.json) {
+                    try {
+                        streamParams.jsonData = JSON.parse(
+                            newData,
+                        ) as TJsonData;
+                    } catch (error) {
+                        options.onError?.(error as Error);
+                    }
+                }
+
+                updateStream(streamParams);
+
+                options.onFinish?.();
+
+                return "";
             });
         },
         [],
@@ -268,4 +269,16 @@ export const useStream = <TJsonData = null>(
         cancel,
         clearData,
     };
+};
+
+export const useJsonStream = <TJsonData = null>(
+    url: string,
+    options: Omit<StreamOptions, "json"> = {},
+) => {
+    const { jsonData, data, ...rest } = useStream<TJsonData>(url, {
+        ...options,
+        json: true,
+    });
+
+    return { data: jsonData, rawData: data, ...rest };
 };
