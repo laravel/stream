@@ -60,6 +60,7 @@ const { data } = useStream("chat", {
     initialInput: undefined,
     headers: undefined,
     csrfToken: undefined,
+    credentials: undefined,
     onResponse: (response: Response) => void,
     onData: (data: string) => void,
     onCancel: () => void,
