@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.2...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.3...main)
+
+## [v0.3.3](https://github.com/laravel/stream/compare/v0.3.2...v0.3.3) - 2025-05-22
+
+### What's Changed
+
+* Add credentials option to `useStream` by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/13
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.2...v0.3.3
 
 ## [v0.3.2](https://github.com/laravel/stream/compare/v0.3.1...v0.3.2) - 2025-05-22
 
