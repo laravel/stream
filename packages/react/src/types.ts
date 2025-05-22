@@ -21,6 +21,7 @@ export type StreamOptions = {
     headers?: Record<string, string>;
     csrfToken?: string;
     json?: boolean;
+    credentials?: RequestCredentials;
     onResponse?: (response: Response) => void;
     onData?: (data: string) => void;
     onCancel?: () => void;

@@ -134,6 +134,7 @@ export const useStream = <TJsonData = null>(
                 ...(options.headers ?? {}),
             },
             body: JSON.stringify(body),
+            credentials: options.credentials ?? "same-origin",
         })
             .then(async (response) => {
                 if (!response.ok) {
