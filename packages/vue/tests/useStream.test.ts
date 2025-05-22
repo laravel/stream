@@ -413,7 +413,7 @@ describe("useStream", () => {
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
 
         expect(result.data.value).toEqual(jsonData);
-        expect(result.rawData.value).toBe(JSON.stringify(jsonData));
+        expect(result.strData.value).toBe(JSON.stringify(jsonData));
     });
 
     it("handles JSON parsing errors (useJsonStream)", async () => {
@@ -453,6 +453,6 @@ describe("useStream", () => {
 
         expect(onError).toHaveBeenCalled();
         expect(result.data.value).toBeNull();
-        expect(result.rawData.value).toBe(invalidJson);
+        expect(result.strData.value).toBe(invalidJson);
     });
 });
