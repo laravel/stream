@@ -280,5 +280,5 @@ export const useJsonStream = <TJsonData = null>(
         json: true,
     });
 
-    return { data: jsonData, rawData: data, ...rest };
+    return { data: jsonData, strData: data, ...rest };
 };

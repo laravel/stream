@@ -520,7 +520,7 @@ describe("useStream", () => {
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(result.current.data).toEqual(jsonData);
-        expect(result.current.rawData).toEqual(JSON.stringify(jsonData));
+        expect(result.current.strData).toEqual(JSON.stringify(jsonData));
     });
 
     it("should handle JSON parsing errors (useJsonStream)", async () => {
@@ -561,6 +561,6 @@ describe("useStream", () => {
         expect(onError).toHaveBeenCalled();
 
         expect(result.current.data).toBeNull();
-        expect(result.current.rawData).toBe(invalidJson);
+        expect(result.current.strData).toBe(invalidJson);
     });
 });
