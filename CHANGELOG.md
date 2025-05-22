@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.1...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.2...main)
+
+## [v0.3.2](https://github.com/laravel/stream/compare/v0.3.1...v0.3.2) - 2025-05-22
+
+### What's Changed
+
+* rawData -> strData for useJsonStream by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/12
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.1...v0.3.2
 
 ## [v0.3.1](https://github.com/laravel/stream/compare/v0.3.0...v0.3.1) - 2025-05-20
 
