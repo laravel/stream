@@ -47,6 +47,8 @@ if [ -n "$(git status --porcelain)" ]; then
     exit 1
 fi
 
+git pull
+
 echo "Starting package version management..."
 
 root_package_json="packages/react/package.json"
