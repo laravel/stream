@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.3...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.4...main)
+
+## [v0.3.4](https://github.com/laravel/stream/compare/v0.3.3...v0.3.4) - 2025-05-23
+
+### What's Changed
+
+* Callback syncing by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/14
+* Add `onBeforeSend` to `useStream` by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/15
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.3...v0.3.4
 
 ## [v0.3.3](https://github.com/laravel/stream/compare/v0.3.2...v0.3.3) - 2025-05-22
 
