@@ -141,6 +141,64 @@ describe("useStream", () => {
         expect(onFinish).toHaveBeenCalled();
     });
 
+    it("triggers onBeforeSend callback", async () => {
+        const onBeforeSend = vi.fn();
+
+        const [result] = withSetup(() => useStream(url, { onBeforeSend }));
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(onBeforeSend).toHaveBeenCalled();
+    });
+
+    it("can cancel a call via onBeforeSend callback", async () => {
+        const onBeforeSend = vi.fn(() => false);
+        let requested = false;
+
+        server.use(
+            http.post(url, async () => {
+                requested = true;
+                return response();
+            }),
+        );
+
+        const [result] = withSetup(() => useStream(url, { onBeforeSend }));
+
+        result.send({ test: "data" });
+
+        expect(onBeforeSend).toHaveBeenCalled();
+        expect(requested).toBe(false);
+    });
+
+    it("can modify a request via onBeforeSend callback", async () => {
+        const onBeforeSend = vi.fn((request) => ({
+            ...request,
+            body: JSON.stringify({ modified: true }),
+        }));
+
+        let capturedBody;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedBody = await request.json();
+                return response();
+            }),
+        );
+
+        const [result] = withSetup(() => useStream(url, { onBeforeSend }));
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        expect(onBeforeSend).toHaveBeenCalled();
+        expect(capturedBody).toEqual({ modified: true });
+    });
+
     it("triggers onData callback with chunks", async () => {
         const onData = vi.fn();
 

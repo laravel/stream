@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { onMounted, onUnmounted, readonly, Ref, ref } from "vue";
 import {
     addCallbacks,
+    onBeforeSend,
     onCancel,
     onData,
     onError,
@@ -78,12 +79,7 @@ export const useStream = <TJsonData = null>(
     const makeRequest = (body: Record<string, any> = {}) => {
         const controller = new AbortController();
 
-        updateStream({
-            isFetching: true,
-            controller,
-        });
-
-        fetch(url, {
+        const request: RequestInit = {
             method: "POST",
             signal: controller.signal,
             headers: {
@@ -92,7 +88,20 @@ export const useStream = <TJsonData = null>(
             },
             body: JSON.stringify(body),
             credentials: options.credentials ?? "same-origin",
-        })
+        };
+
+        const modifiedRequest = onBeforeSend(id, request);
+
+        if (modifiedRequest === false) {
+            return;
+        }
+
+        updateStream({
+            isFetching: true,
+            controller,
+        });
+
+        fetch(url, modifiedRequest ?? request)
             .then(async (response) => {
                 if (!response.ok) {
                     const error = await response.text();

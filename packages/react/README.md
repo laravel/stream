@@ -49,27 +49,23 @@ function App() {
 
 When sending data back to the stream, the active connection to the stream is canceled before sending the new data. All requests are sent as JSON `POST` requests.
 
-The second argument given to `useStream` is an options object that you may use to customize the stream consumption behavior. The default values for this object are shown below:
+The second argument given to `useStream` is an options object that you may use to customize the stream consumption behavior:
 
-```tsx
-import { useStream } from "@laravel/stream-react";
-
-function App() {
-    const { data } = useStream("chat", {
-        id: undefined,
-        initialInput: undefined,
-        headers: undefined,
-        csrfToken: undefined,
-        credentials: undefined,
-        onResponse: (response: Response) => void,
-        onData: (data: string) => void,
-        onCancel: () => void,
-        onFinish: () => void,
-        onError: (error: Error) => void,
-    });
-
-    return <div>{data}</div>;
-}
+```ts
+type StreamOptions = {
+    id?: string;
+    initialInput?: Record<string, any>;
+    headers?: Record<string, string>;
+    csrfToken?: string;
+    json?: boolean;
+    credentials?: RequestCredentials;
+    onResponse?: (response: Response) => void;
+    onData?: (data: string) => void;
+    onCancel?: () => void;
+    onFinish?: () => void;
+    onError?: (error: Error) => void;
+    onBeforeSend?: (request: RequestInit) => boolean | RequestInit | void;
+};
 ```
 
 `onResponse` is triggered after a successful initial response from the stream and the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) is passed to the callback.
@@ -77,6 +73,8 @@ function App() {
 `onData` is called as each chunk is received, the current chunk is passed to the callback.
 
 `onFinish` is called when a stream has finished and when an error is thrown during the fetch/read cycle.
+
+`onBeforeSend` is called right before sending the request to the server and receives the `RequestInit` object as an argument. Returning `false` from this callback cancels the request, returning a [`RequestInit`](https://developer.mozilla.org/en-US/docs/Web/API/RequestInit) object will override the existing `RequestInit` object.
 
 By default, a request is not made the to stream on initialization. You may pass an initial payload to the stream by using the `initialInput` option:
 

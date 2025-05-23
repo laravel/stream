@@ -1,4 +1,4 @@
-import { RequiredCallbacks, StreamOptions } from "../types";
+import { Callback, RequiredCallbacks, StreamOptions } from "../types";
 
 const callbacks = new Map<
     string,
@@ -8,6 +8,7 @@ const callbacks = new Map<
         onFinish: RequiredCallbacks["onFinish"][];
         onResponse: RequiredCallbacks["onResponse"][];
         onCancel: RequiredCallbacks["onCancel"][];
+        onBeforeSend: RequiredCallbacks["onBeforeSend"][];
     }
 >();
 
@@ -19,6 +20,7 @@ export const addCallbacks = (id: string, options: StreamOptions) => {
             onFinish: [],
             onResponse: [],
             onCancel: [],
+            onBeforeSend: [],
         });
     }
 
@@ -44,6 +46,10 @@ export const addCallbacks = (id: string, options: StreamOptions) => {
         streamCallbacks.onCancel.push(options.onCancel);
     }
 
+    if (options.onBeforeSend) {
+        streamCallbacks.onBeforeSend.push(options.onBeforeSend);
+    }
+
     return () => {
         removeCallbacks(id, options);
     };
@@ -51,19 +57,17 @@ export const addCallbacks = (id: string, options: StreamOptions) => {
 
 const dispatchCallbacks = (
     id: string,
-    callback: "onData" | "onError" | "onFinish" | "onResponse" | "onCancel",
+    callback: Callback,
     ...args: unknown[]
-) => {
+): any[] => {
     const streamCallbacks = callbacks.get(id);
 
     if (!streamCallbacks) {
-        return;
+        return [];
     }
 
-    streamCallbacks[callback].forEach((cb) => {
-        // @ts-expect-error Any args
-        cb(...args);
-    });
+    // @ts-expect-error Any args
+    return streamCallbacks[callback].map((cb) => cb(...args));
 };
 
 export const onFinish = (id: string) => {
@@ -84,6 +88,26 @@ export const onCancel = (id: string) => {
 
 export const onData = (id: string, data: string) => {
     dispatchCallbacks(id, "onData", data);
+};
+
+export const onBeforeSend = (id: string, request: RequestInit) => {
+    const results = dispatchCallbacks(id, "onBeforeSend", request) as (
+        | boolean
+        | RequestInit
+        | void
+    )[];
+
+    for (const result of results) {
+        if (result === false) {
+            return false;
+        }
+
+        if (result !== null && typeof result === "object") {
+            return result;
+        }
+    }
+
+    return null;
 };
 
 export const removeCallbacks = (id: string, options: StreamOptions) => {
@@ -120,6 +144,12 @@ export const removeCallbacks = (id: string, options: StreamOptions) => {
     if (options.onCancel) {
         streamCallbacks.onCancel = streamCallbacks.onCancel.filter(
             (cb) => cb !== options.onCancel,
+        );
+    }
+
+    if (options.onBeforeSend) {
+        streamCallbacks.onBeforeSend = streamCallbacks.onBeforeSend.filter(
+            (cb) => cb !== options.onBeforeSend,
         );
     }
 };
