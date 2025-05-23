@@ -257,6 +257,7 @@ describe("useStream", () => {
 
     it("syncs streams with the same id", async () => {
         const id = "test-stream-id";
+        const onFinish = vi.fn();
         let capturedHeaders: any;
 
         server.use(
@@ -267,7 +268,7 @@ describe("useStream", () => {
         );
 
         const [result1] = withSetup(() => useStream(url, { id }));
-        const [result2] = withSetup(() => useStream(url, { id }));
+        const [result2] = withSetup(() => useStream(url, { id, onFinish }));
 
         result1.send({ test: "data" });
 
@@ -284,6 +285,8 @@ describe("useStream", () => {
         expect(result2.data.value).toBe("chunk1chunk2");
 
         expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
+
+        expect(onFinish).toHaveBeenCalled();
     });
 
     it("parses JSON data when json option is true", async () => {
