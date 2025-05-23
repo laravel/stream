@@ -337,6 +337,7 @@ describe("useStream", () => {
     it("will sync streams with the same id", async () => {
         const payload = { test: "data" };
         const id = "test-stream-id";
+        const onFinish = vi.fn();
         let capturedHeaders: any;
 
         server.use(
@@ -347,7 +348,9 @@ describe("useStream", () => {
         );
 
         const { result } = renderHook(() => useStream(url, { id }));
-        const { result: result2 } = renderHook(() => useStream(url, { id }));
+        const { result: result2 } = renderHook(() =>
+            useStream(url, { id, onFinish }),
+        );
 
         await act(() => {
             result.current.send(payload);
@@ -369,6 +372,8 @@ describe("useStream", () => {
         expect(result2.current.data).toBe("chunk1chunk2");
 
         expect(capturedHeaders.get("X-STREAM-ID")).toBe(id);
+
+        expect(onFinish).toHaveBeenCalled();
     });
 
     it.skip("should cancel stream when component unmounts", async () => {

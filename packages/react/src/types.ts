@@ -29,6 +29,13 @@ export type StreamOptions = {
     onError?: (error: Error) => void;
 };
 
+export type RequiredCallbacks = Required<
+    Pick<
+        StreamOptions,
+        "onData" | "onError" | "onFinish" | "onResponse" | "onCancel"
+    >
+>;
+
 export type StreamMeta<TJsonData = null> = {
     controller: AbortController;
     data: string;
