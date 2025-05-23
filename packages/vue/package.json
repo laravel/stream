@@ -1,6 +1,6 @@
 {
     "name": "@laravel/stream-vue",
-    "version": "0.3.3",
+    "version": "0.3.4",
     "description": "Laravel streaming hooks for Vue",
     "keywords": [
         "laravel",
