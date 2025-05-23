@@ -150,6 +150,84 @@ describe("useStream", () => {
         expect(onFinish).toHaveBeenCalled();
     });
 
+    it("will trigger the onBeforeSend callback", async () => {
+        const payload = { test: "data" };
+        const onBeforeSend = vi.fn();
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onBeforeSend,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onBeforeSend).toHaveBeenCalled();
+    });
+
+    it("can cancel via the onBeforeSend callback", async () => {
+        const payload = { test: "data" };
+        const onBeforeSend = vi.fn(() => false);
+        let requested = false;
+
+        server.use(
+            http.post(url, async () => {
+                requested = true;
+                return response();
+            }),
+        );
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onBeforeSend,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        expect(onBeforeSend).toHaveBeenCalled();
+        expect(requested).toBe(false);
+    });
+
+    it("can modify the request via the onBeforeSend callback", async () => {
+        const payload = { test: "data" };
+        const onBeforeSend = vi.fn((request) => ({
+            ...request,
+            body: JSON.stringify({ modified: true }),
+        }));
+        let capturedBody;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedBody = await request.json();
+                return response();
+            }),
+        );
+
+        const { result } = renderHook(() =>
+            useStream(url, {
+                onBeforeSend,
+            }),
+        );
+
+        act(() => {
+            result.current.send(payload);
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        expect(onBeforeSend).toHaveBeenCalled();
+        expect(capturedBody).toEqual({ modified: true });
+    });
+
     it("will trigger the onData callback", async () => {
         const payload = { test: "data" };
         const onData = vi.fn();

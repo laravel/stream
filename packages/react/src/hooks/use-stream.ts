@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     addCallbacks,
+    onBeforeSend,
     onCancel,
     onData,
     onError,
@@ -81,12 +82,7 @@ export const useStream = <TJsonData = null>(
         (body: Record<string, any> = {}) => {
             const controller = new AbortController();
 
-            updateStream({
-                isFetching: true,
-                controller,
-            });
-
-            fetch(url, {
+            const request: RequestInit = {
                 method: "POST",
                 signal: controller.signal,
                 headers: {
@@ -95,7 +91,20 @@ export const useStream = <TJsonData = null>(
                 },
                 body: JSON.stringify(body),
                 credentials: options.credentials ?? "same-origin",
-            })
+            };
+
+            const modifiedRequest = onBeforeSend(id.current, request);
+
+            if (modifiedRequest === false) {
+                return;
+            }
+
+            updateStream({
+                isFetching: true,
+                controller,
+            });
+
+            fetch(url, modifiedRequest ?? request)
                 .then(async (response) => {
                     if (!response.ok) {
                         const error = await response.text();
