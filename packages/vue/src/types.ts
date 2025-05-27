@@ -17,9 +17,9 @@ export type EventStreamResult = {
     clearMessage: () => void;
 };
 
-export type StreamOptions = {
+export type StreamOptions<TSendBody extends Record<string, any> = {}> = {
     id?: string;
-    initialInput?: Record<string, any>;
+    initialInput?: TSendBody;
     headers?: Record<string, string>;
     csrfToken?: string;
     json?: boolean;
