@@ -17,16 +17,19 @@ import {
 } from "../streams/store";
 import { StreamMeta, StreamOptions } from "../types";
 
-export const useStream = <TJsonData = null>(
+export const useStream = <
+    TSendBody extends Record<string, any> = {},
+    TJsonData = null,
+>(
     url: string,
-    options: StreamOptions = {},
+    options: StreamOptions<TSendBody> = {},
 ): {
     data: Readonly<Ref<string>>;
     jsonData: Readonly<TJsonData | null>;
     isFetching: Readonly<Ref<boolean>>;
     isStreaming: Readonly<Ref<boolean>>;
     id: string;
-    send: (body: Record<string, any>) => void;
+    send: (body: TSendBody) => void;
     cancel: () => void;
     clearData: () => void;
 } => {
@@ -76,7 +79,7 @@ export const useStream = <TJsonData = null>(
         });
     };
 
-    const makeRequest = (body: Record<string, any> = {}) => {
+    const makeRequest = (body?: TSendBody) => {
         const controller = new AbortController();
 
         const request: RequestInit = {
@@ -86,7 +89,7 @@ export const useStream = <TJsonData = null>(
                 ...headers,
                 ...(options.headers ?? {}),
             },
-            body: JSON.stringify(body),
+            body: JSON.stringify(body ?? {}),
             credentials: options.credentials ?? "same-origin",
         };
 
@@ -134,7 +137,7 @@ export const useStream = <TJsonData = null>(
             });
     };
 
-    const send = (body: Record<string, any>) => {
+    const send = (body: TSendBody) => {
         cancel();
         makeRequest(body);
         clearData();
@@ -225,11 +228,14 @@ export const useStream = <TJsonData = null>(
     };
 };
 
-export const useJsonStream = <TJsonData = null>(
+export const useJsonStream = <
+    TJsonData = null,
+    TSendBody extends Record<string, any> = {},
+>(
     url: string,
-    options: Omit<StreamOptions, "json"> = {},
+    options: Omit<StreamOptions<TSendBody>, "json"> = {},
 ) => {
-    const { jsonData, data, ...rest } = useStream<TJsonData>(url, {
+    const { jsonData, data, ...rest } = useStream<TSendBody, TJsonData>(url, {
         ...options,
         json: true,
     });

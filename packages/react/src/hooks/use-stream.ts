@@ -17,9 +17,12 @@ import {
 } from "../streams/store";
 import { StreamMeta, StreamOptions } from "../types";
 
-export const useStream = <TJsonData = null>(
+export const useStream = <
+    TSendBody extends Record<string, any> = {},
+    TJsonData = null,
+>(
     url: string,
-    options: StreamOptions = {},
+    options: StreamOptions<TSendBody> = {},
 ) => {
     const id = useRef<string>(options.id ?? nanoid());
     const stream = useRef(resolveStream<TJsonData>(id.current));
@@ -79,7 +82,7 @@ export const useStream = <TJsonData = null>(
     }, []);
 
     const makeRequest = useCallback(
-        (body: Record<string, any> = {}) => {
+        (body?: TSendBody) => {
             const controller = new AbortController();
 
             const request: RequestInit = {
@@ -89,7 +92,7 @@ export const useStream = <TJsonData = null>(
                     ...headers.current,
                     ...(options.headers ?? {}),
                 },
-                body: JSON.stringify(body),
+                body: JSON.stringify(body ?? {}),
                 credentials: options.credentials ?? "same-origin",
             };
 
@@ -139,7 +142,7 @@ export const useStream = <TJsonData = null>(
         [url],
     );
 
-    const send = useCallback((body: Record<string, any>) => {
+    const send = useCallback((body: TSendBody) => {
         cancel();
         makeRequest(body);
         clearData();
@@ -243,11 +246,14 @@ export const useStream = <TJsonData = null>(
     };
 };
 
-export const useJsonStream = <TJsonData = null>(
+export const useJsonStream = <
+    TJsonData = null,
+    TSendBody extends Record<string, any> = {},
+>(
     url: string,
-    options: Omit<StreamOptions, "json"> = {},
+    options: Omit<StreamOptions<TSendBody>, "json"> = {},
 ) => {
-    const { jsonData, data, ...rest } = useStream<TJsonData>(url, {
+    const { jsonData, data, ...rest } = useStream<TSendBody, TJsonData>(url, {
         ...options,
         json: true,
     });
