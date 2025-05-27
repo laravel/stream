@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.4...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.5...main)
+
+## [v0.3.5](https://github.com/laravel/stream/compare/v0.3.4...v0.3.5) - 2025-05-27
+
+### What's Changed
+
+* Add generic type for the `send` method by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/16
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.4...v0.3.5
 
 ## [v0.3.4](https://github.com/laravel/stream/compare/v0.3.3...v0.3.4) - 2025-05-23
 
