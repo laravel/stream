@@ -41,7 +41,7 @@
         "build": "vite build",
         "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\"",
         "prepublish": "pnpm run build",
-        "release": "vitest --run && git push --follow-tags && pnpm publish",
+        "release": "vitest --run && npm publish",
         "test": "vitest",
         "format": "prettier --write ."
     },
