@@ -1,6 +1,6 @@
 {
     "name": "@laravel/stream-react",
-    "version": "0.3.7",
+    "version": "0.3.8",
     "description": "Laravel streaming hooks for React",
     "keywords": [
         "laravel",
