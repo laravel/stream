@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.5...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.6...main)
+
+## [v0.3.6](https://github.com/laravel/stream/compare/v0.3.5...v0.3.6) - 2025-09-22
+
+### What's Changed
+
+* Publish packages in CI by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/17
+* Update release script by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/18
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.5...v0.3.6
 
 ## [v0.3.5](https://github.com/laravel/stream/compare/v0.3.4...v0.3.5) - 2025-05-27
 
