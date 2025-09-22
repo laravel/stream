@@ -2,7 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.6...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.7...main)
+
+## [v0.3.7](https://github.com/laravel/stream/compare/v0.3.6...v0.3.7) - 2025-09-22
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.6...v0.3.7
+
+- Fixed Trusted Publishing
 
 ## [v0.3.6](https://github.com/laravel/stream/compare/v0.3.5...v0.3.6) - 2025-09-22
 
