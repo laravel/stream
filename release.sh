@@ -1,5 +1,7 @@
 #!/bin/bash
 
+$REPO="laravel/stream"
+
 get_current_version() {
     local package_json=$1
     if [ -f "$package_json" ]; then
@@ -84,33 +86,13 @@ echo "Staging package.json files..."
 git add "**/package.json"
 echo ""
 
-echo "Committing version changes..."
-git commit -m "v$new_version"
-echo ""
-
-echo "Creating git tag: v$new_version"
-git tag "v$new_version"
+git commit -m "$new_version"
+git tag -a "$new_version" -m "$new_version"
+git push
 git push --tags
-echo ""
 
-echo "Running release process..."
-echo ""
-
-for package_dir in packages/*; do
-    if [ -d "$package_dir" ]; then
-        echo "Releasing $package_dir"
-        cd $package_dir
-        pnpm run release
-        cd ../..
-        echo ""
-    fi
-done
-
-echo "Released!"
+gh release create "$new_version" --generate-notes
 
 echo ""
-
-echo "Release on GitHub:"
-echo "https://github.com/laravel/stream/releases/tag/v$new_version"
-
-open "https://github.com/laravel/stream/releases/tag/v$new_version"
+echo "✅ Release $new_version completed successfully, publishing kicked off in CI."
+echo "🔗 https://github.com/$REPO/releases/tag/$new_version"
