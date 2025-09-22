@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.8...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.9...main)
+
+## [v0.3.9](https://github.com/laravel/stream/compare/v0.3.8...v0.3.9) - 2025-09-22
+
+### What's Changed
+
+* Fix PNPM publishing by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/19
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.8...v0.3.9
 
 ## [v0.3.8](https://github.com/laravel/stream/compare/v0.3.7...v0.3.8) - 2025-09-22
 
