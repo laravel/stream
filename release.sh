@@ -126,7 +126,7 @@ git tag -a "$TAG" -m "$TAG"
 git push
 git push --tags
 
-gh release create "$TAG" --generate-notes --fail-on-no-commits
+gh release create "$TAG" --generate-notes
 
 echo ""
 echo "✅ Release $TAG completed successfully, publishing kicked off in CI."
