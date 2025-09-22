@@ -117,17 +117,17 @@ echo "Updating lock file..."
 pnpm i
 echo ""
 
-# echo "Staging package.json files..."
-# git add "**/package.json"
-# echo ""
+echo "Staging package.json files..."
+git add "**/package.json"
+echo ""
 
-# git commit -m "$TAG"
-# git tag -a "$TAG" -m "$TAG"
-# git push
-# git push --tags
+git commit -m "$TAG"
+git tag -a "$TAG" -m "$TAG"
+git push
+git push --tags
 
-# gh release create "$TAG" --generate-notes --fail-on-no-commits
+gh release create "$TAG" --generate-notes --fail-on-no-commits
 
-# echo ""
-# echo "✅ Release $TAG completed successfully, publishing kicked off in CI."
-# echo "🔗 https://github.com/$REPO/releases/tag/$TAG"
+echo ""
+echo "✅ Release $TAG completed successfully, publishing kicked off in CI."
+echo "🔗 https://github.com/$REPO/releases/tag/$TAG"
