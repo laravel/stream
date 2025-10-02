@@ -207,8 +207,14 @@ export const useStream = <
     });
 
     onUnmounted(() => {
-        stopListening();
-        removeCallbacks();
+        if (stopListening) {
+            stopListening();
+        }
+
+        if (removeCallbacks) {
+            removeCallbacks();
+        }
+
         window.removeEventListener("beforeunload", cancel);
 
         if (!hasListeners(id)) {
