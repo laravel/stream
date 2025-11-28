@@ -1,4 +1,12 @@
-import { onMounted, onUnmounted, readonly, ref, watch } from "vue";
+import {
+    MaybeRefOrGetter,
+    onMounted,
+    onUnmounted,
+    readonly,
+    ref,
+    toRef,
+    watch,
+} from "vue";
 import { EventStreamOptions, EventStreamResult } from "../types";
 
 const dataPrefix = "data: ";
@@ -14,7 +22,7 @@ const dataPrefix = "data: ";
  * @returns StreamResult object containing the accumulated response, close, and reset functions
  */
 export const useEventStream = (
-    url: string,
+    url: MaybeRefOrGetter<string>,
     {
         eventName = "update",
         endSignal = "</stream>",
@@ -25,6 +33,7 @@ export const useEventStream = (
         onError = () => null,
     }: EventStreamOptions = {},
 ): EventStreamResult => {
+    const reactiveUrl = toRef(url);
     const message = ref("");
     const messageParts = ref<string[]>([]);
     const eventNames = Array.isArray(eventName) ? eventName : [eventName];
@@ -78,7 +87,7 @@ export const useEventStream = (
     const setupConnection = () => {
         resetMessageState();
 
-        source = new EventSource(url);
+        source = new EventSource(reactiveUrl.value);
 
         eventNames.forEach((eventName) => {
             source!.addEventListener(eventName, handleMessage);
@@ -94,15 +103,12 @@ export const useEventStream = (
         closeConnection();
     });
 
-    watch(
-        () => url,
-        (newUrl: string, oldUrl: string) => {
-            if (newUrl !== oldUrl) {
-                closeConnection();
-                setupConnection();
-            }
-        },
-    );
+    watch(reactiveUrl, (newUrl: string, oldUrl: string) => {
+        if (newUrl !== oldUrl) {
+            closeConnection();
+            setupConnection();
+        }
+    });
 
     return {
         message: readonly(message),
