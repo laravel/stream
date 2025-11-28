@@ -4,15 +4,16 @@ import {
     afterAll,
     afterEach,
     beforeAll,
+    beforeEach,
     describe,
     expect,
     it,
     vi,
 } from "vitest";
-import { createApp } from "vue";
+import { ref, createApp, App } from "vue";
 import { useJsonStream, useStream } from "../src/composables/useStream";
 
-function withSetup(composable) {
+function withSetup<T>(composable: () => T): [T, App<Element>] {
     let result;
 
     const app = createApp({
@@ -24,7 +25,7 @@ function withSetup(composable) {
 
     app.mount(document.createElement("div"));
 
-    return [result, app];
+    return [result as T, app];
 }
 
 describe("useStream", () => {
@@ -382,7 +383,7 @@ describe("useStream", () => {
 
         const [result] = withSetup(() => useStream(url, { json: true }));
 
-        result.send({});
+        result.send();
 
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
@@ -423,7 +424,7 @@ describe("useStream", () => {
             useStream(url, { json: true, onError }),
         );
 
-        result.send({});
+        result.send();
 
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
@@ -468,7 +469,7 @@ describe("useStream", () => {
 
         const [result] = withSetup(() => useJsonStream(url));
 
-        result.send({});
+        result.send();
 
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
@@ -507,7 +508,7 @@ describe("useStream", () => {
 
         const [result] = withSetup(() => useJsonStream(url, { onError }));
 
-        result.send({});
+        result.send();
 
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
         await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
@@ -515,5 +516,135 @@ describe("useStream", () => {
         expect(onError).toHaveBeenCalled();
         expect(result.data.value).toBeNull();
         expect(result.strData.value).toBe(invalidJson);
+    });
+
+    describe("url reactivity", () => {
+        const jsonData = {
+            0: { api: "/stream/1", data: { test: "data1", value: 123 } },
+            1: { api: "/stream/2", data: { test: "data2", value: 456 } },
+        };
+
+        beforeEach(() =>
+            server.use(
+                http.post(jsonData[0].api, async () => {
+                    await delay(20);
+
+                    return new HttpResponse(
+                        new ReadableStream({
+                            async start(controller) {
+                                await delay(20);
+                                controller.enqueue(
+                                    new TextEncoder().encode(
+                                        '{"test":"data1",',
+                                    ),
+                                );
+
+                                await delay(20);
+                                controller.enqueue(
+                                    new TextEncoder().encode('"value":123}'),
+                                );
+
+                                controller.close();
+                            },
+                        }),
+                        {
+                            status: 200,
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        },
+                    );
+                }),
+                http.post(jsonData[1].api, async () => {
+                    await delay(20);
+
+                    return new HttpResponse(
+                        new ReadableStream({
+                            async start(controller) {
+                                await delay(20);
+                                controller.enqueue(
+                                    new TextEncoder().encode(
+                                        '{"test":"data2",',
+                                    ),
+                                );
+
+                                await delay(20);
+                                controller.enqueue(
+                                    new TextEncoder().encode('"value":456}'),
+                                );
+
+                                controller.close();
+                            },
+                        }),
+                        {
+                            status: 200,
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                        },
+                    );
+                }),
+            ),
+        );
+
+        it("reacts when url is a ref", async () => {
+            const urlRef = ref(jsonData[0].api);
+
+            const [result] = withSetup(() => useStream(urlRef, { json: true }));
+
+            result.send();
+            await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+            await vi.waitFor(() =>
+                expect(result.isStreaming.value).toBe(false),
+            );
+            await vi.waitFor(() =>
+                expect(result.data.value).toBe(
+                    JSON.stringify(jsonData[0].data),
+                ),
+            );
+
+            urlRef.value = jsonData[1].api;
+
+            await delay(20);
+
+            await vi.waitFor(() => expect(result.data.value).toBe(""));
+
+            result.send();
+            await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+            await vi.waitFor(() =>
+                expect(result.isStreaming.value).toBe(false),
+            );
+
+            expect(result.data.value).toBe(JSON.stringify(jsonData[1].data));
+        });
+
+        it("reacts when url is a ref (useJsonStream)", async () => {
+            const urlRef = ref(jsonData[0].api);
+
+            const [result] = withSetup(() => useJsonStream(urlRef));
+
+            result.send();
+            await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+            await vi.waitFor(() =>
+                expect(result.isStreaming.value).toBe(false),
+            );
+            await vi.waitFor(() =>
+                expect(result.data.value).toEqual(jsonData[0].data),
+            );
+
+            urlRef.value = jsonData[1].api;
+
+            await delay(20);
+
+            await vi.waitFor(() => expect(result.data.value).toBeNull());
+
+            result.send();
+            await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+            await vi.waitFor(() =>
+                expect(result.isStreaming.value).toBe(false),
+            );
+
+            expect(result.data.value).toEqual(jsonData[1].data);
+        });
     });
 });
