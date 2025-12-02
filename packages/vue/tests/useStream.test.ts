@@ -10,7 +10,7 @@ import {
     it,
     vi,
 } from "vitest";
-import { ref, createApp, App } from "vue";
+import { App, createApp, ref } from "vue";
 import { useJsonStream, useStream } from "../src/composables/useStream";
 
 function withSetup<T>(composable: () => T): [T, App<Element>] {
@@ -519,10 +519,10 @@ describe("useStream", () => {
     });
 
     describe("url reactivity", () => {
-        const jsonData = {
-            0: { api: "/stream/1", data: { test: "data1", value: 123 } },
-            1: { api: "/stream/2", data: { test: "data2", value: 456 } },
-        };
+        const jsonData = [
+            { api: "/stream/1", data: { test: "data1", value: 123 } },
+            { api: "/stream/2", data: { test: "data2", value: 456 } },
+        ];
 
         beforeEach(() =>
             server.use(
