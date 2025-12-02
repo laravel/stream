@@ -33,7 +33,7 @@ export const useEventStream = (
         onError = () => null,
     }: EventStreamOptions = {},
 ): EventStreamResult => {
-    const reactiveUrl = toRef(url);
+    const urlRef = toRef(url);
     const message = ref("");
     const messageParts = ref<string[]>([]);
     const eventNames = Array.isArray(eventName) ? eventName : [eventName];
@@ -87,7 +87,7 @@ export const useEventStream = (
     const setupConnection = () => {
         resetMessageState();
 
-        source = new EventSource(reactiveUrl.value);
+        source = new EventSource(urlRef.value);
 
         eventNames.forEach((eventName) => {
             source!.addEventListener(eventName, handleMessage);
@@ -103,7 +103,7 @@ export const useEventStream = (
         closeConnection();
     });
 
-    watch(reactiveUrl, (newUrl: string, oldUrl: string) => {
+    watch(urlRef, (newUrl: string, oldUrl: string) => {
         if (newUrl !== oldUrl) {
             closeConnection();
             setupConnection();

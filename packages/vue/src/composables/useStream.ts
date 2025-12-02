@@ -42,7 +42,7 @@ export const useStream = <
     cancel: () => void;
     clearData: () => void;
 } => {
-    const reactiveUrl = toRef(url);
+    const urlRef = toRef(url);
     const id = options.id ?? nanoid();
     const stream = ref<StreamMeta<TJsonData>>(resolveStream<TJsonData>(id));
     const headers = (() => {
@@ -114,7 +114,7 @@ export const useStream = <
             controller,
         });
 
-        fetch(reactiveUrl.value, modifiedRequest ?? request)
+        fetch(urlRef.value, modifiedRequest ?? request)
             .then(async (response) => {
                 if (!response.ok) {
                     const error = await response.text();
@@ -232,7 +232,7 @@ export const useStream = <
         }
     });
 
-    watch(reactiveUrl, (newUrl: string, oldUrl: string) => {
+    watch(urlRef, (newUrl: string, oldUrl: string) => {
         if (newUrl !== oldUrl) {
             cancel();
             clearData();
