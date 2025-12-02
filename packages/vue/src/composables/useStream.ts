@@ -1,5 +1,14 @@
 import { nanoid } from "nanoid";
-import { onMounted, onUnmounted, readonly, Ref, ref } from "vue";
+import {
+    MaybeRefOrGetter,
+    onMounted,
+    onUnmounted,
+    readonly,
+    Ref,
+    ref,
+    toRef,
+    watch,
+} from "vue";
 import {
     addCallbacks,
     onBeforeSend,
@@ -21,7 +30,7 @@ export const useStream = <
     TSendBody extends Record<string, any> = {},
     TJsonData = null,
 >(
-    url: string,
+    url: MaybeRefOrGetter<string>,
     options: StreamOptions<TSendBody> = {},
 ): {
     data: Readonly<Ref<string>>;
@@ -29,10 +38,11 @@ export const useStream = <
     isFetching: Readonly<Ref<boolean>>;
     isStreaming: Readonly<Ref<boolean>>;
     id: string;
-    send: (body: TSendBody) => void;
+    send: (body?: TSendBody) => void;
     cancel: () => void;
     clearData: () => void;
 } => {
+    const urlRef = toRef(url);
     const id = options.id ?? nanoid();
     const stream = ref<StreamMeta<TJsonData>>(resolveStream<TJsonData>(id));
     const headers = (() => {
@@ -104,7 +114,7 @@ export const useStream = <
             controller,
         });
 
-        fetch(url, modifiedRequest ?? request)
+        fetch(urlRef.value, modifiedRequest ?? request)
             .then(async (response) => {
                 if (!response.ok) {
                     const error = await response.text();
@@ -137,7 +147,7 @@ export const useStream = <
             });
     };
 
-    const send = (body: TSendBody) => {
+    const send = (body?: TSendBody) => {
         cancel();
         makeRequest(body);
         clearData();
@@ -150,7 +160,7 @@ export const useStream = <
         });
     };
 
-    const read = (
+    const read = async (
         reader: ReadableStreamDefaultReader<AllowSharedBufferSource>,
         str = "",
     ): Promise<string> => {
@@ -222,6 +232,13 @@ export const useStream = <
         }
     });
 
+    watch(urlRef, (newUrl: string, oldUrl: string) => {
+        if (newUrl !== oldUrl) {
+            cancel();
+            clearData();
+        }
+    });
+
     return {
         data: readonly(data),
         jsonData: readonly(jsonData) as Readonly<TJsonData | null>,
@@ -238,7 +255,7 @@ export const useJsonStream = <
     TJsonData = null,
     TSendBody extends Record<string, any> = {},
 >(
-    url: string,
+    url: MaybeRefOrGetter<string>,
     options: Omit<StreamOptions<TSendBody>, "json"> = {},
 ) => {
     const { jsonData, data, ...rest } = useStream<TSendBody, TJsonData>(url, {
