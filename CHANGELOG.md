@@ -2,7 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.9...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.10...main)
+
+## [v0.3.10](https://github.com/laravel/stream/compare/v0.3.9...v0.3.10) - 2025-12-02
+
+### What's Changed
+
+* Prevent destroy errors by checking if method exists by [@tomas-ug](https://github.com/tomas-ug) in https://github.com/laravel/stream/pull/20
+* [Vue Feature]: Support reactive URLs in useStream by [@ayrtonandino](https://github.com/ayrtonandino) in https://github.com/laravel/stream/pull/21
+
+### New Contributors
+
+* [@tomas-ug](https://github.com/tomas-ug) made their first contribution in https://github.com/laravel/stream/pull/20
+* [@ayrtonandino](https://github.com/ayrtonandino) made their first contribution in https://github.com/laravel/stream/pull/21
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.9...v0.3.10
 
 ## [v0.3.9](https://github.com/laravel/stream/compare/v0.3.8...v0.3.9) - 2025-09-22
 
