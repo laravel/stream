@@ -9,10 +9,14 @@ export type EventStreamOptions = {
 };
 
 export type EventStreamResult = {
-    message: string;
-    messageParts: readonly string[];
+    subscribe: (run: (value: EventStreamState) => void) => () => void;
     close: (resetMessage?: boolean) => void;
     clearMessage: () => void;
+};
+
+export type EventStreamState = {
+    message: string;
+    messageParts: readonly string[];
 };
 
 export type StreamOptions<TSendBody extends Record<string, any> = {}> = {

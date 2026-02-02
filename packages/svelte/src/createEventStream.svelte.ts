@@ -1,17 +1,18 @@
-import { $effect, $state } from "svelte";
+import { writable } from "svelte/store";
 import { EventStreamOptions, EventStreamResult } from "./types";
 
 const dataPrefix = "data: ";
 
 /**
- * Creates a reactive event stream for handling server-sent events (SSE) in Svelte 5
+ * Creates a reactive event stream for handling server-sent events (SSE) in Svelte 5.
+ * Returns a Svelte store: use `$eventStream` in templates so the component re-renders when events arrive.
  *
  * @param url - The URL to connect to for the EventSource (can be a function for reactivity)
  * @param options - Options for the stream
  *
  * @link https://laravel.com/docs/responses#event-streams
  *
- * @returns StreamResult object containing the accumulated response, close, and reset functions
+ * @returns A store-like object: subscribe to react to changes, plus close and clearMessage
  */
 export const createEventStream = (
     url: string | (() => string),
@@ -26,16 +27,18 @@ export const createEventStream = (
     }: EventStreamOptions = {},
 ): EventStreamResult => {
     const getUrl = typeof url === "function" ? url : () => url;
-    let message = $state("");
-    let messageParts = $state<string[]>([]);
     const eventNames = Array.isArray(eventName) ? eventName : [eventName];
+
+    const store = writable<{ message: string; messageParts: string[] }>({
+        message: "",
+        messageParts: [],
+    });
 
     let source: EventSource | null = null;
     let currentUrl = getUrl();
 
     const resetMessageState = () => {
-        message = "";
-        messageParts = [];
+        store.set({ message: "", messageParts: [] });
     };
 
     const closeConnection = (resetMessage: boolean = false) => {
@@ -52,7 +55,6 @@ export const createEventStream = (
     };
 
     const handleMessage = (event: MessageEvent<string>) => {
-
         if ([endSignal, `${dataPrefix}${endSignal}`].includes(event.data)) {
             closeConnection();
             onComplete();
@@ -60,16 +62,24 @@ export const createEventStream = (
             return;
         }
 
-        if (replace) {
-            resetMessageState();
-        }
+        store.update((state) => {
+            let messageParts = [...state.messageParts];
 
-        const newPart = event.data.startsWith(dataPrefix)
-            ? event.data.substring(dataPrefix.length)
-            : event.data;
+            if (replace) {
+                messageParts = [];
+            }
 
-        messageParts = [...messageParts, newPart];
-        message = messageParts.join(glue);
+            const newPart = event.data.startsWith(dataPrefix)
+                ? event.data.substring(dataPrefix.length)
+                : event.data;
+
+            messageParts = [...messageParts, newPart];
+
+            return {
+                message: messageParts.join(glue),
+                messageParts,
+            };
+        });
 
         onMessage(event);
     };
@@ -90,31 +100,28 @@ export const createEventStream = (
         source.addEventListener("error", handleError);
     };
 
-    $effect(() => {
-        setupConnection();
-
-        return () => {
-            closeConnection();
-        };
-    });
-
-    $effect(() => {
-        const newUrl = getUrl();
-
-        if (newUrl !== currentUrl) {
-            currentUrl = newUrl;
-            closeConnection();
+    $effect.root(() => {
+        $effect(() => {
             setupConnection();
-        }
+
+            return () => {
+                closeConnection();
+            };
+        });
+
+        $effect(() => {
+            const newUrl = getUrl();
+
+            if (newUrl !== currentUrl) {
+                currentUrl = newUrl;
+                closeConnection();
+                setupConnection();
+            }
+        });
     });
 
     return {
-        get message() {
-            return message;
-        },
-        get messageParts() {
-            return messageParts;
-        },
+        subscribe: store.subscribe,
         close: closeConnection,
         clearMessage: resetMessageState,
     };

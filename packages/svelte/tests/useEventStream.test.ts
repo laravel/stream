@@ -1,5 +1,8 @@
+import { get } from "svelte/store";
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import { createEventStream } from "../src/createEventStream.svelte";
+
+const state = (stream: ReturnType<typeof createEventStream>) => get(stream);
 
 describe("createEventStream", () => {
     let mocks: ReturnType<typeof global.createEventSourceMock>;
@@ -13,8 +16,8 @@ describe("createEventStream", () => {
     test("createEventStream initializes with default values", () => {
         const result = createEventStream("/stream");
 
-        expect(result.message).toBe("");
-        expect(result.messageParts).toEqual([]);
+        expect(state(result).message).toBe("");
+        expect(state(result).messageParts).toEqual([]);
         expect(typeof result.clearMessage).toBe("function");
         expect(typeof result.close).toBe("function");
     });
@@ -26,13 +29,13 @@ describe("createEventStream", () => {
 
         eventHandler({ data: "Hello" } as MessageEvent);
 
-        expect(result.message).toBe("Hello");
-        expect(result.messageParts).toEqual(["Hello"]);
+        expect(state(result).message).toBe("Hello");
+        expect(state(result).messageParts).toEqual(["Hello"]);
 
         eventHandler({ data: "World" } as MessageEvent);
 
-        expect(result.message).toBe("Hello World");
-        expect(result.messageParts).toEqual(["Hello", "World"]);
+        expect(state(result).message).toBe("Hello World");
+        expect(state(result).messageParts).toEqual(["Hello", "World"]);
     });
 
     it("processes incoming messages correctly with replace option", async () => {
@@ -42,13 +45,13 @@ describe("createEventStream", () => {
 
         eventHandler({ data: "Hello" } as MessageEvent);
 
-        expect(result.message).toBe("Hello");
-        expect(result.messageParts).toEqual(["Hello"]);
+        expect(state(result).message).toBe("Hello");
+        expect(state(result).messageParts).toEqual(["Hello"]);
 
         eventHandler({ data: "World" } as MessageEvent);
 
-        expect(result.message).toBe("World");
-        expect(result.messageParts).toEqual(["World"]);
+        expect(state(result).message).toBe("World");
+        expect(state(result).messageParts).toEqual(["World"]);
     });
 
     it("can clear the message", async () => {
@@ -59,13 +62,13 @@ describe("createEventStream", () => {
         eventHandler({ data: "Hello" } as MessageEvent);
         eventHandler({ data: "World" } as MessageEvent);
 
-        expect(result.message).toBe("Hello World");
-        expect(result.messageParts).toEqual(["Hello", "World"]);
+        expect(state(result).message).toBe("Hello World");
+        expect(state(result).messageParts).toEqual(["Hello", "World"]);
 
         result.clearMessage();
 
-        expect(result.message).toBe("");
-        expect(result.messageParts).toEqual([]);
+        expect(state(result).message).toBe("");
+        expect(state(result).messageParts).toEqual([]);
     });
 
     it("can close the stream manually", async () => {
@@ -84,12 +87,12 @@ describe("createEventStream", () => {
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
 
         eventHandler({ data: "Hello" } as MessageEvent);
-        expect(result.message).toBe("Hello");
-        expect(result.messageParts).toEqual(["Hello"]);
+        expect(state(result).message).toBe("Hello");
+        expect(state(result).messageParts).toEqual(["Hello"]);
 
         eventHandler({ data: "World" } as MessageEvent);
-        expect(result.message).toBe("Hello|World");
-        expect(result.messageParts).toEqual(["Hello", "World"]);
+        expect(state(result).message).toBe("Hello|World");
+        expect(state(result).messageParts).toEqual(["Hello", "World"]);
     });
 
     it("handles end signal correctly", async () => {

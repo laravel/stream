@@ -1,5 +1,6 @@
+import { derived, get } from "svelte/store";
 import { nanoid } from "nanoid";
-import { $effect, $state } from "svelte";
+import { writable } from "svelte/store";
 import {
     addCallbacks,
     onBeforeSend,
@@ -17,13 +18,29 @@ import {
 } from "./streams/store";
 import { StreamMeta, StreamOptions } from "./types";
 
+export type StreamState<TJsonData = null> = {
+    data: string;
+    jsonData: TJsonData | null;
+    isFetching: boolean;
+    isStreaming: boolean;
+};
+
+export type Stream<TJsonData = null, TSendBody extends Record<string, any> = {}> =
+    {
+        subscribe: (run: (value: StreamState<TJsonData>) => void) => () => void;
+        id: string;
+        send: (body?: TSendBody) => void;
+        cancel: () => void;
+        clearData: () => void;
+    };
+
 /**
  * Creates a reactive stream for handling streaming responses from Laravel.
- * Must be called from component setup (top-level of a .svelte script) or from another .svelte.ts module.
+ * Returns a Svelte store: use `$stream` in templates so the component re-renders when data updates.
  *
  * @param url - The URL to POST to (or a getter for reactive URLs)
  * @param options - Stream options (initialInput, callbacks, etc.)
- * @returns A reactive stream object with data, jsonData, isFetching, isStreaming, send, cancel, and clearData
+ * @returns A store-like object: subscribe to react to changes, plus send, cancel, clearData, id
  *
  * @see https://laravel.com/docs/responses#streamed-responses
  */
@@ -33,24 +50,17 @@ export const createStream = <
 >(
     url: string | (() => string),
     options: StreamOptions<TSendBody> = {},
-): {
-    data: string;
-    jsonData: TJsonData | null;
-    isFetching: boolean;
-    isStreaming: boolean;
-    id: string;
-    send: (body?: TSendBody) => void;
-    cancel: () => void;
-    clearData: () => void;
-} => {
+): Stream<TJsonData, TSendBody> => {
     const getUrl = typeof url === "function" ? url : () => url;
     const id = options.id ?? nanoid();
     const initialStream = resolveStream<TJsonData>(id);
 
-    let data = $state(initialStream.data);
-    let jsonData = $state<TJsonData | null>(initialStream.jsonData);
-    let isFetching = $state(initialStream.isFetching);
-    let isStreaming = $state(initialStream.isStreaming);
+    const streamStore = writable<StreamState<TJsonData>>({
+        data: initialStream.data,
+        jsonData: initialStream.jsonData,
+        isFetching: initialStream.isFetching,
+        isStreaming: initialStream.isStreaming,
+    });
 
     const headers = (() => {
         const headers: HeadersInit = {
@@ -83,7 +93,9 @@ export const createStream = <
         const stream = resolveStream<TJsonData>(id);
         stream.controller.abort();
 
-        if (isFetching || isStreaming) {
+        const state = get(streamStore);
+
+        if (state.isFetching || state.isStreaming) {
             onCancel(id);
         }
 
@@ -120,7 +132,6 @@ export const createStream = <
 
         fetch(getUrl(), modifiedRequest ?? request)
             .then(async (response) => {
-
                 if (!response.ok) {
                     const error = await response.text();
                     throw new Error(error);
@@ -170,7 +181,10 @@ export const createStream = <
         str = "",
     ): Promise<string> => {
         return reader.read().then(({ done, value }) => {
-            const incomingStr = new TextDecoder("utf-8").decode(value);
+            const incomingStr =
+                value !== undefined
+                    ? new TextDecoder("utf-8").decode(value)
+                    : "";
             const newData = str + incomingStr;
 
             onData(id, incomingStr);
@@ -203,68 +217,67 @@ export const createStream = <
         });
     };
 
-    $effect(() => {
-        stopListening = addListener(id, (streamUpdate) => {
-            const stream = resolveStream<TJsonData>(id);
-            isFetching = streamUpdate.isFetching;
-            isStreaming = streamUpdate.isStreaming;
-            data = streamUpdate.data;
-            jsonData = streamUpdate.jsonData;
+    $effect.root(() => {
+        $effect(() => {
+            stopListening = addListener(id, (streamUpdate) => {
+                streamStore.set({
+                    data: streamUpdate.data,
+                    jsonData: streamUpdate.jsonData,
+                    isFetching: streamUpdate.isFetching,
+                    isStreaming: streamUpdate.isStreaming,
+                });
+            });
+
+            removeCallbacks = addCallbacks(id, options);
+
+            window.addEventListener("beforeunload", cancel);
+
+            if (options.initialInput) {
+                makeRequest(options.initialInput);
+            }
+
+            return () => {
+                if (stopListening) {
+                    stopListening();
+                }
+
+                if (removeCallbacks) {
+                    removeCallbacks();
+                }
+
+                window.removeEventListener("beforeunload", cancel);
+
+                if (!hasListeners(id)) {
+                    cancel();
+                }
+            };
         });
 
-        removeCallbacks = addCallbacks(id, options);
+        $effect(() => {
+            const newUrl = getUrl();
 
-        window.addEventListener("beforeunload", cancel);
-
-        if (options.initialInput) {
-            makeRequest(options.initialInput);
-        }
-
-        return () => {
-            if (stopListening) {
-                stopListening();
-            }
-
-            if (removeCallbacks) {
-                removeCallbacks();
-            }
-
-            window.removeEventListener("beforeunload", cancel);
-
-            if (!hasListeners(id)) {
+            if (newUrl !== currentUrl) {
+                currentUrl = newUrl;
                 cancel();
+                clearData();
             }
-        };
-    });
-
-    $effect(() => {
-        const newUrl = getUrl();
-
-        if (newUrl !== currentUrl) {
-            currentUrl = newUrl;
-            cancel();
-            clearData();
-        }
+        });
     });
 
     return {
-        get data() {
-            return data;
-        },
-        get jsonData() {
-            return jsonData;
-        },
-        get isFetching() {
-            return isFetching;
-        },
-        get isStreaming() {
-            return isStreaming;
-        },
+        subscribe: streamStore.subscribe,
         id,
         send,
         cancel,
         clearData,
     };
+};
+
+export type JsonStreamState<TJsonData = null> = {
+    data: TJsonData | null;
+    strData: string;
+    isFetching: boolean;
+    isStreaming: boolean;
 };
 
 export const createJsonStream = <
@@ -274,10 +287,23 @@ export const createJsonStream = <
     url: string | (() => string),
     options: Omit<StreamOptions<TSendBody>, "json"> = {},
 ) => {
-    const { jsonData, data, ...rest } = createStream<TSendBody, TJsonData>(url, {
+    const stream = createStream<TSendBody, TJsonData>(url, {
         ...options,
         json: true,
     });
 
-    return { data: jsonData, strData: data, ...rest };
+    const jsonStore = derived(stream, ($s) => ({
+        data: $s.jsonData,
+        strData: $s.data,
+        isFetching: $s.isFetching,
+        isStreaming: $s.isStreaming,
+    }));
+
+    return {
+        subscribe: jsonStore.subscribe,
+        id: stream.id,
+        send: stream.send,
+        cancel: stream.cancel,
+        clearData: stream.clearData,
+    };
 };

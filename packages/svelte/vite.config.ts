@@ -1,9 +1,11 @@
 import { resolve } from "path";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import { svelteModule } from "./vite-plugin-svelte-module";
 
 export default defineConfig({
     plugins: [
+        svelteModule(),
         dts({
             insertTypesEntry: true,
             rollupTypes: true,

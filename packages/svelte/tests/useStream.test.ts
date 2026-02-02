@@ -1,3 +1,4 @@
+import { get } from "svelte/store";
 import { delay, http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import {
@@ -11,6 +12,9 @@ import {
     vi,
 } from "vitest";
 import { createJsonStream, createStream } from "../src/createStream.svelte";
+
+const state = (stream: { subscribe: (run: (v: unknown) => void) => () => void }) =>
+    get(stream);
 
 describe("createStream", () => {
     const url = "/stream";
@@ -53,9 +57,9 @@ describe("createStream", () => {
     it("initializes with default values", () => {
         const result = createStream(url);
 
-        expect(result.data).toBe("");
-        expect(result.isFetching).toBe(false);
-        expect(result.isStreaming).toBe(false);
+        expect(state(result).data).toBe("");
+        expect(state(result).isFetching).toBe(false);
+        expect(state(result).isStreaming).toBe(false);
         expect(result.id).toBeDefined();
         expect(result.id).toBeTypeOf("string");
     });
@@ -65,17 +69,17 @@ describe("createStream", () => {
 
         const result = createStream(url, { initialInput });
 
-        await vi.waitFor(() => expect(result.isFetching).toBe(true));
-        await vi.waitFor(() => expect(result.isFetching).toBe(false));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.data).toBe("chunk1"));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isFetching).toBe(true));
+        await vi.waitFor(() => expect(state(result).isFetching).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).data).toBe("chunk1"));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
-        expect(result.data).toBe("chunk1chunk2");
+        expect(state(result).data).toBe("chunk1chunk2");
 
         result.clearData();
 
-        expect(result.data).toBe("");
+        expect(state(result).data).toBe("");
     });
 
     it("can send data to the endpoint", async () => {
@@ -93,11 +97,11 @@ describe("createStream", () => {
 
         result.send(payload);
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
         expect(capturedBody).toEqual(payload);
-        expect(result.data).toBe("chunk1chunk2");
+        expect(state(result).data).toBe("chunk1chunk2");
     });
 
     it("triggers onResponse callback", async () => {
@@ -107,8 +111,8 @@ describe("createStream", () => {
 
         result.send({ test: "data" });
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
         expect(onResponse).toHaveBeenCalled();
     });
@@ -120,8 +124,8 @@ describe("createStream", () => {
 
         result.send({ test: "data" });
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
         expect(onFinish).toHaveBeenCalled();
     });
@@ -133,8 +137,8 @@ describe("createStream", () => {
 
         result.send({ test: "data" });
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
         expect(onBeforeSend).toHaveBeenCalled();
     });
@@ -165,8 +169,8 @@ describe("createStream", () => {
 
         result.send({ test: "data" });
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
         expect(onData).toHaveBeenCalledWith("chunk1");
         expect(onData).toHaveBeenCalledWith("chunk2");
@@ -191,13 +195,13 @@ describe("createStream", () => {
 
         result.send({ test: "data" });
 
-        await vi.waitFor(() => expect(result.isFetching).toBe(true));
-        await vi.waitFor(() => expect(result.isFetching).toBe(false));
+        await vi.waitFor(() => expect(state(result).isFetching).toBe(true));
+        await vi.waitFor(() => expect(state(result).isFetching).toBe(false));
 
         expect(onError).toHaveBeenCalledWith(new Error(errorMessage));
         expect(onFinish).toHaveBeenCalled();
-        expect(result.isFetching).toBe(false);
-        expect(result.isStreaming).toBe(false);
+        expect(state(result).isFetching).toBe(false);
+        expect(state(result).isStreaming).toBe(false);
     });
 
     it("can cancel the stream", async () => {
@@ -205,11 +209,11 @@ describe("createStream", () => {
         const result = createStream(url, { onCancel });
 
         result.send({ test: "data" });
-        await vi.waitFor(() => expect(result.data).toBe("chunk1"));
+        await vi.waitFor(() => expect(state(result).data).toBe("chunk1"));
 
         result.cancel();
 
-        expect(result.isStreaming).toBe(false);
+        expect(state(result).isStreaming).toBe(false);
         expect(onCancel).toHaveBeenCalled();
     });
 
@@ -250,11 +254,11 @@ describe("createStream", () => {
 
         result.send();
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
-        expect(result.data).toBe(JSON.stringify(jsonData));
-        expect(result.jsonData).toEqual(jsonData);
+        expect(state(result).data).toBe(JSON.stringify(jsonData));
+        expect(state(result).jsonData).toEqual(jsonData);
     });
 
     it("parses JSON data when json option is true (createJsonStream)", async () => {
@@ -294,10 +298,10 @@ describe("createStream", () => {
 
         result.send();
 
-        await vi.waitFor(() => expect(result.isStreaming).toBe(true));
-        await vi.waitFor(() => expect(result.isStreaming).toBe(false));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
 
-        expect(result.data).toEqual(jsonData);
-        expect(result.strData).toBe(JSON.stringify(jsonData));
+        expect(state(result).data).toEqual(jsonData);
+        expect(state(result).strData).toBe(JSON.stringify(jsonData));
     });
 });
