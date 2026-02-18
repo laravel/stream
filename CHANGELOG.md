@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.11...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.12...main)
+
+## [v0.3.12](https://github.com/laravel/stream/compare/v0.3.11...v0.3.12) - 2026-02-18
+
+### What's Changed
+
+* Security Fixes by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/24
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.11...v0.3.12
 
 ## [v0.3.11](https://github.com/laravel/stream/compare/v0.3.10...v0.3.11) - 2026-02-18
 
