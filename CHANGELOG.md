@@ -2,7 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.10...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.11...main)
+
+## [v0.3.11](https://github.com/laravel/stream/compare/v0.3.10...v0.3.11) - 2026-02-18
+
+### What's Changed
+
+* Svelte Package by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/22
+* Add Svelte package to README by [@pushpak1300](https://github.com/pushpak1300) in https://github.com/laravel/stream/pull/23
+
+### New Contributors
+
+* [@pushpak1300](https://github.com/pushpak1300) made their first contribution in https://github.com/laravel/stream/pull/23
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.10...v0.3.11
 
 ## [v0.3.10](https://github.com/laravel/stream/compare/v0.3.9...v0.3.10) - 2025-12-02
 
