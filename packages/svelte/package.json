@@ -50,9 +50,9 @@
     "devDependencies": {
         "@types/node": "^22.14.0",
         "esbuild": "^0.24.0",
-        "@typescript-eslint/eslint-plugin": "^8.21.0",
-        "@typescript-eslint/parser": "^8.21.0",
-        "eslint": "^9.0.0",
+        "@typescript-eslint/eslint-plugin": "^8.56.0",
+        "@typescript-eslint/parser": "^8.56.0",
+        "eslint": "^10.0.0",
         "jsdom": "^26.0.0",
         "msw": "^2.8.2",
         "prettier": "^3.5.3",
