@@ -195,7 +195,7 @@ describe("useEventStream", () => {
 
         vi.stubGlobal(
             "EventSource",
-            vi.fn().mockImplementation(() => {
+            vi.fn(function EventSourceMock() {
                 eventSourceCount++;
                 return {
                     addEventListener: vi.fn(),
