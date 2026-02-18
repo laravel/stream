@@ -24,14 +24,16 @@ export type StreamState<TJsonData = null> = {
     isStreaming: boolean;
 };
 
-export type Stream<TJsonData = null, TSendBody extends Record<string, any> = {}> =
-    {
-        subscribe: (run: (value: StreamState<TJsonData>) => void) => () => void;
-        id: string;
-        send: (body?: TSendBody) => void;
-        cancel: () => void;
-        clearData: () => void;
-    };
+export type Stream<
+    TJsonData = null,
+    TSendBody extends Record<string, any> = {},
+> = {
+    subscribe: (run: (value: StreamState<TJsonData>) => void) => () => void;
+    id: string;
+    send: (body?: TSendBody) => void;
+    cancel: () => void;
+    clearData: () => void;
+};
 
 /**
  * Creates a reactive stream for handling streaming responses from Laravel.
