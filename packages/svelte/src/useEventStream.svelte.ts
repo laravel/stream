@@ -14,7 +14,7 @@ const dataPrefix = "data: ";
  *
  * @returns A store-like object: subscribe to react to changes, plus close and clearMessage
  */
-export const createEventStream = (
+export const useEventStream = (
     url: string | (() => string),
     {
         eventName = "update",

@@ -44,7 +44,7 @@ export type Stream<TJsonData = null, TSendBody extends Record<string, any> = {}>
  *
  * @see https://laravel.com/docs/responses#streamed-responses
  */
-export const createStream = <
+export const useStream = <
     TSendBody extends Record<string, any> = {},
     TJsonData = null,
 >(
@@ -280,14 +280,14 @@ export type JsonStreamState<TJsonData = null> = {
     isStreaming: boolean;
 };
 
-export const createJsonStream = <
+export const useJsonStream = <
     TJsonData = null,
     TSendBody extends Record<string, any> = {},
 >(
     url: string | (() => string),
     options: Omit<StreamOptions<TSendBody>, "json"> = {},
 ) => {
-    const stream = createStream<TSendBody, TJsonData>(url, {
+    const stream = useStream<TSendBody, TJsonData>(url, {
         ...options,
         json: true,
     });

@@ -1,10 +1,10 @@
 import { get } from "svelte/store";
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
-import { createEventStream } from "../src/createEventStream.svelte";
+import { useEventStream } from "../src/useEventStream.svelte";
 
-const state = (stream: ReturnType<typeof createEventStream>) => get(stream);
+const state = (stream: ReturnType<typeof useEventStream>) => get(stream);
 
-describe("createEventStream", () => {
+describe("useEventStream", () => {
     let mocks: ReturnType<typeof global.createEventSourceMock>;
 
     beforeEach(() => {
@@ -13,8 +13,8 @@ describe("createEventStream", () => {
         mocks = global.createEventSourceMock();
     });
 
-    test("createEventStream initializes with default values", () => {
-        const result = createEventStream("/stream");
+    test("useEventStream initializes with default values", () => {
+        const result = useEventStream("/stream");
 
         expect(state(result).message).toBe("");
         expect(state(result).messageParts).toEqual([]);
@@ -23,7 +23,7 @@ describe("createEventStream", () => {
     });
 
     it("processes incoming messages correctly", async () => {
-        const result = createEventStream("/stream");
+        const result = useEventStream("/stream");
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -40,7 +40,7 @@ describe("createEventStream", () => {
     });
 
     it("processes incoming messages correctly with replace option", async () => {
-        const result = createEventStream("/stream", { replace: true });
+        const result = useEventStream("/stream", { replace: true });
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -57,7 +57,7 @@ describe("createEventStream", () => {
     });
 
     it("can clear the message", async () => {
-        const result = createEventStream("/stream");
+        const result = useEventStream("/stream");
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -76,7 +76,7 @@ describe("createEventStream", () => {
 
     it("can close the stream manually", async () => {
         const onCompleteMock = vi.fn();
-        const result = createEventStream("/stream", { onComplete: onCompleteMock });
+        const result = useEventStream("/stream", { onComplete: onCompleteMock });
         await Promise.resolve();
 
         result.close();
@@ -86,7 +86,7 @@ describe("createEventStream", () => {
     });
 
     it("clears message and messageParts when close is called with resetMessage true", async () => {
-        const result = createEventStream("/stream");
+        const result = useEventStream("/stream");
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -104,7 +104,7 @@ describe("createEventStream", () => {
     });
 
     it("can handle custom glue", async () => {
-        const result = createEventStream("/stream", { glue: "|" });
+        const result = useEventStream("/stream", { glue: "|" });
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -120,7 +120,7 @@ describe("createEventStream", () => {
 
     it("handles end signal correctly", async () => {
         const onCompleteMock = vi.fn();
-        const result = createEventStream("/stream", { onComplete: onCompleteMock });
+        const result = useEventStream("/stream", { onComplete: onCompleteMock });
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -132,7 +132,7 @@ describe("createEventStream", () => {
 
     it("handles errors correctly", async () => {
         const onErrorMock = vi.fn();
-        const result = createEventStream("/stream", { onError: onErrorMock });
+        const result = useEventStream("/stream", { onError: onErrorMock });
         await Promise.resolve();
 
         const errorHandler = mocks.addEventListener.mock.calls[1][1];
@@ -149,7 +149,7 @@ describe("createEventStream", () => {
 
     it("handles EventSource error event by passing Error to onError", async () => {
         const onErrorMock = vi.fn();
-        const result = createEventStream("/stream", { onError: onErrorMock });
+        const result = useEventStream("/stream", { onError: onErrorMock });
         await Promise.resolve();
 
         const errorHandler = mocks.addEventListener.mock.calls[1][1];
@@ -165,7 +165,7 @@ describe("createEventStream", () => {
     });
 
     it("receives messages from multiple event names when eventName is array", async () => {
-        const result = createEventStream("/stream", { eventName: ["update", "create"] });
+        const result = useEventStream("/stream", { eventName: ["update", "create"] });
         await Promise.resolve();
 
         const updateHandler = mocks.addEventListener.mock.calls[0][1];
@@ -182,7 +182,7 @@ describe("createEventStream", () => {
 
     it("onMessage callback is called with incoming messages", async () => {
         const onMessageMock = vi.fn();
-        const result = createEventStream("/stream", {
+        const result = useEventStream("/stream", {
             onMessage: onMessageMock,
         });
         await Promise.resolve();

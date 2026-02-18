@@ -1,11 +1,11 @@
-export { createEventStream } from "./createEventStream.svelte";
+export { useEventStream } from "./useEventStream.svelte";
 export {
-    createJsonStream,
-    createStream,
+    useJsonStream,
+    useStream,
     type JsonStreamState,
     type Stream,
     type StreamState,
-} from "./createStream.svelte";
+} from "./useStream.svelte";
 export type {
     EventStreamOptions,
     EventStreamResult,

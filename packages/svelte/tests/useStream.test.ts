@@ -10,12 +10,12 @@ import {
     it,
     vi,
 } from "vitest";
-import { createJsonStream, createStream } from "../src/createStream.svelte";
+import { useJsonStream, useStream } from "../src/useStream.svelte";
 
 const state = (stream: { subscribe: (run: (v: unknown) => void) => () => void }) =>
     get(stream);
 
-describe("createStream", () => {
+describe("useStream", () => {
     const url = "/stream";
     const response = async (duration = 20) => {
         await delay(duration);
@@ -54,7 +54,7 @@ describe("createStream", () => {
     afterAll(() => server.close());
 
     it("initializes with default values", () => {
-        const result = createStream(url);
+        const result = useStream(url);
 
         expect(state(result).data).toBe("");
         expect(state(result).isFetching).toBe(false);
@@ -66,7 +66,7 @@ describe("createStream", () => {
     it("makes a request with initial input", async () => {
         const initialInput = { test: "data" };
 
-        const result = createStream(url, { initialInput });
+        const result = useStream(url, { initialInput });
         await Promise.resolve();
 
         await vi.waitFor(() => expect(state(result).isFetching).toBe(true));
@@ -84,7 +84,7 @@ describe("createStream", () => {
 
     it("uses URL getter for requests", async () => {
         const getterUrl = "/stream";
-        const result = createStream(() => getterUrl);
+        const result = useStream(() => getterUrl);
         await Promise.resolve();
 
         result.send({ test: "data" });
@@ -106,7 +106,7 @@ describe("createStream", () => {
             }),
         );
 
-        const result = createStream(url);
+        const result = useStream(url);
         await Promise.resolve();
 
         result.send(payload);
@@ -121,7 +121,7 @@ describe("createStream", () => {
     it("triggers onResponse callback", async () => {
         const onResponse = vi.fn();
 
-        const result = createStream(url, { onResponse });
+        const result = useStream(url, { onResponse });
 
         result.send({ test: "data" });
 
@@ -134,7 +134,7 @@ describe("createStream", () => {
     it("triggers onFinish callback", async () => {
         const onFinish = vi.fn();
 
-        const result = createStream(url, { onFinish });
+        const result = useStream(url, { onFinish });
 
         result.send({ test: "data" });
 
@@ -147,7 +147,7 @@ describe("createStream", () => {
     it("triggers onBeforeSend callback", async () => {
         const onBeforeSend = vi.fn();
 
-        const result = createStream(url, { onBeforeSend });
+        const result = useStream(url, { onBeforeSend });
         await Promise.resolve();
 
         result.send({ test: "data" });
@@ -169,7 +169,7 @@ describe("createStream", () => {
             }),
         );
 
-        const result = createStream(url, { onBeforeSend });
+        const result = useStream(url, { onBeforeSend });
         await Promise.resolve();
 
         result.send({ test: "data" });
@@ -197,7 +197,7 @@ describe("createStream", () => {
             }),
         );
 
-        const result = createStream(url, { onBeforeSend });
+        const result = useStream(url, { onBeforeSend });
         await Promise.resolve();
 
         result.send({ test: "data" });
@@ -213,7 +213,7 @@ describe("createStream", () => {
     it("triggers onData callback with chunks", async () => {
         const onData = vi.fn();
 
-        const result = createStream(url, { onData });
+        const result = useStream(url, { onData });
 
         result.send({ test: "data" });
 
@@ -239,7 +239,7 @@ describe("createStream", () => {
 
         const onError = vi.fn();
         const onFinish = vi.fn();
-        const result = createStream(url, { onError, onFinish });
+        const result = useStream(url, { onError, onFinish });
         await Promise.resolve();
 
         result.send({ test: "data" });
@@ -255,7 +255,7 @@ describe("createStream", () => {
 
     it("can cancel the stream", async () => {
         const onCancel = vi.fn();
-        const result = createStream(url, { onCancel });
+        const result = useStream(url, { onCancel });
 
         result.send({ test: "data" });
         await vi.waitFor(() => expect(state(result).data).toBe("chunk1"));
@@ -299,7 +299,7 @@ describe("createStream", () => {
             }),
         );
 
-        const result = createStream(url, { json: true });
+        const result = useStream(url, { json: true });
 
         result.send();
 
@@ -310,7 +310,7 @@ describe("createStream", () => {
         expect(state(result).jsonData).toEqual(jsonData);
     });
 
-    it("parses JSON data when json option is true (createJsonStream)", async () => {
+    it("parses JSON data when json option is true (useJsonStream)", async () => {
         const jsonData = { test: "data", value: 123 };
 
         server.use(
@@ -343,7 +343,7 @@ describe("createStream", () => {
             }),
         );
 
-        const result = createJsonStream(url);
+        const result = useJsonStream(url);
 
         result.send();
 
