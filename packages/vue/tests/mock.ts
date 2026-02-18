@@ -39,15 +39,16 @@ const createEventSourceMock = () => {
 
     vi.stubGlobal(
         "EventSource",
-        vi.fn().mockImplementation(() => ({
-            addEventListener: mockAddEventListener,
-            removeEventListener: mockRemoveEventListener,
-            close: mockClose,
-            set onerror(handler) {
-                // Legacy: for direct assignment, not used in new API
-                onErrorHandler = handler;
-            },
-        })),
+        vi.fn(function EventSourceMock() {
+            return {
+                addEventListener: mockAddEventListener,
+                removeEventListener: mockRemoveEventListener,
+                close: mockClose,
+                set onerror(handler) {
+                    onErrorHandler = handler;
+                },
+            };
+        }),
     );
 
     return {
