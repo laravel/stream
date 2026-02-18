@@ -1,6 +1,6 @@
 {
     "name": "@laravel/stream-svelte",
-    "version": "0.3.10",
+    "version": "0.3.11",
     "description": "Laravel streaming helpers for Svelte 5",
     "keywords": [
         "laravel",
