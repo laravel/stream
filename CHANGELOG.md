@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.12...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.13...main)
+
+## [v0.3.13](https://github.com/laravel/stream/compare/v0.3.12...v0.3.13) - 2026-02-18
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.12...v0.3.13
 
 ## [v0.3.12](https://github.com/laravel/stream/compare/v0.3.11...v0.3.12) - 2026-02-18
 
