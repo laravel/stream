@@ -22,7 +22,7 @@ npm install @laravel/stream-svelte
 
 The `useStream` function allows you to seamlessly consume [streamed responses](https://laravel.com/docs/responses#streamed-responses) in your Svelte application.
 
-Call `useStream` at the top level of your component script (or in a `.svelte.ts` module). Provide your stream URL and the returned object will automatically update `data` with the concatenated response as data is returned from your server:
+Call `useStream` at the top level of your component script (or in a `.svelte.ts` module). Provide your stream URL and the returned object will automatically update `data` with the concatenated response as data is returned from your server. The returned object is store-like: use `$stream` in the template to react to `data`, `isFetching`, and `isStreaming`.
 
 ```svelte
 <script>
@@ -38,11 +38,11 @@ Call `useStream` at the top level of your component script (or in a `.svelte.ts`
 </script>
 
 <div>
-    <div>{stream.data}</div>
-    {#if stream.isFetching}
+    <div>{$stream.data}</div>
+    {#if $stream.isFetching}
         <div>Connecting...</div>
     {/if}
-    {#if stream.isStreaming}
+    {#if $stream.isStreaming}
         <div>Generating...</div>
     {/if}
     <button onclick={sendMessage}>Send Message</button>
@@ -91,7 +91,7 @@ By default, a request is not made to the stream on initialization. You may pass 
     });
 </script>
 
-<div>{stream.data}</div>
+<div>{$stream.data}</div>
 ```
 
 To cancel a stream manually, you may use the `cancel` method returned from the stream object:
@@ -104,7 +104,7 @@ To cancel a stream manually, you may use the `cancel` method returned from the s
 </script>
 
 <div>
-    <div>{stream.data}</div>
+    <div>{$stream.data}</div>
     <button onclick={() => stream.cancel()}>Cancel</button>
 </div>
 ```
@@ -123,7 +123,7 @@ When consuming the same stream from multiple components, you can read and write 
 </script>
 
 <div>
-    <div>{stream.data}</div>
+    <div>{$stream.data}</div>
     <StreamStatus id={stream.id} />
 </div>
 ```
@@ -139,10 +139,10 @@ When consuming the same stream from multiple components, you can read and write 
 </script>
 
 <div>
-    {#if stream.isFetching}
+    {#if $stream.isFetching}
         <div>Connecting...</div>
     {/if}
-    {#if stream.isStreaming}
+    {#if $stream.isStreaming}
         <div>Generating...</div>
     {/if}
 </div>
@@ -171,8 +171,8 @@ The `useJsonStream` function is identical to `useStream` except that it will att
 
 <div>
     <ul>
-        {#if stream.data?.users}
-            {#each stream.data.users as user (user.id)}
+        {#if $stream.data?.users}
+            {#each $stream.data.users as user (user.id)}
                 <li>{user.id}: {user.name}</li>
             {/each}
         {/if}
@@ -194,7 +194,7 @@ Provide your stream URL and the returned object will automatically update `messa
     const eventStream = useEventStream("/stream");
 </script>
 
-<div>{eventStream.message}</div>
+<div>{$eventStream.message}</div>
 ```
 
 You also have access to the array of message parts:
@@ -207,7 +207,7 @@ You also have access to the array of message parts:
 </script>
 
 <ul>
-    {#each eventStream.messageParts as message}
+    {#each $eventStream.messageParts as message}
         <li>{message}</li>
     {/each}
 </ul>
@@ -273,7 +273,7 @@ You can close the connection manually by using the returned `close` function:
     });
 </script>
 
-<div>{eventStream.message}</div>
+<div>{$eventStream.message}</div>
 ```
 
 The `clearMessage` function may be used to clear the message content that has been received so far:
@@ -293,7 +293,7 @@ The `clearMessage` function may be used to clear the message content that has be
     });
 </script>
 
-<div>{eventStream.message}</div>
+<div>{$eventStream.message}</div>
 ```
 
 ## License

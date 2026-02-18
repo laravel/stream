@@ -41,7 +41,7 @@
     ],
     "scripts": {
         "build": "vite build",
-        "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\"",
+        "lint": "eslint --config eslint.config.mjs \"src/**/*.ts\" \"src/**/*.svelte.ts\"",
         "prepublish": "pnpm run build",
         "release": "vitest --run && pnpm publish --no-git-checks",
         "test": "vitest",

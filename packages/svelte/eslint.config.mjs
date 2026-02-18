@@ -4,7 +4,7 @@ import tsParser from "@typescript-eslint/parser";
 const config = [
     {
         ignores: ["dist/**/*"],
-        files: ["src/**/*.ts"],
+        files: ["src/**/*.ts", "src/**/*.svelte.ts"],
         languageOptions: {
             parser: tsParser,
             parserOptions: {
