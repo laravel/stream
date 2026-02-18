@@ -28,9 +28,9 @@
         "format": "pnpm -r --if-present run format"
     },
     "devDependencies": {
-        "prettier": "^3.5.3"
+        "prettier": "^3.8.1"
     },
     "dependencies": {
-        "nanoid": "^5.1.5"
+        "nanoid": "^5.1.6"
     }
 }
