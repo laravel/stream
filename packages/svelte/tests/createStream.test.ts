@@ -5,7 +5,6 @@ import {
     afterAll,
     afterEach,
     beforeAll,
-    beforeEach,
     describe,
     expect,
     it,
@@ -68,6 +67,7 @@ describe("createStream", () => {
         const initialInput = { test: "data" };
 
         const result = createStream(url, { initialInput });
+        await Promise.resolve();
 
         await vi.waitFor(() => expect(state(result).isFetching).toBe(true));
         await vi.waitFor(() => expect(state(result).isFetching).toBe(false));
@@ -82,6 +82,19 @@ describe("createStream", () => {
         expect(state(result).data).toBe("");
     });
 
+    it("uses URL getter for requests", async () => {
+        const getterUrl = "/stream";
+        const result = createStream(() => getterUrl);
+        await Promise.resolve();
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        expect(state(result).data).toBe("chunk1chunk2");
+    });
+
     it("can send data to the endpoint", async () => {
         const payload = { test: "data" };
         let capturedBody: any;
@@ -94,6 +107,7 @@ describe("createStream", () => {
         );
 
         const result = createStream(url);
+        await Promise.resolve();
 
         result.send(payload);
 
@@ -134,6 +148,7 @@ describe("createStream", () => {
         const onBeforeSend = vi.fn();
 
         const result = createStream(url, { onBeforeSend });
+        await Promise.resolve();
 
         result.send({ test: "data" });
 
@@ -155,12 +170,45 @@ describe("createStream", () => {
         );
 
         const result = createStream(url, { onBeforeSend });
+        await Promise.resolve();
 
         result.send({ test: "data" });
 
         expect(onBeforeSend).toHaveBeenCalled();
         expect(requested).toBe(false);
     });
+
+    it("uses modified request when onBeforeSend returns RequestInit", async () => {
+        const customHeader = "custom-value";
+        const onBeforeSend = vi.fn((request: RequestInit) => ({
+            ...request,
+            headers: {
+                ...(request.headers as Record<string, string>),
+                "X-Custom-Header": customHeader,
+            },
+        }));
+
+        let capturedHeaders: Headers | undefined;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const result = createStream(url, { onBeforeSend });
+        await Promise.resolve();
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        expect(capturedHeaders?.get("X-Custom-Header")).toBe(customHeader);
+        expect(state(result).data).toBe("chunk1chunk2");
+    });
+
 
     it("triggers onData callback with chunks", async () => {
         const onData = vi.fn();
@@ -192,6 +240,7 @@ describe("createStream", () => {
         const onError = vi.fn();
         const onFinish = vi.fn();
         const result = createStream(url, { onError, onFinish });
+        await Promise.resolve();
 
         result.send({ test: "data" });
 

@@ -5,7 +5,7 @@ export type EventStreamOptions = {
     replace?: boolean;
     onMessage?: (event: MessageEvent) => void;
     onComplete?: () => void;
-    onError?: (error: Event) => void;
+    onError?: (error: Error) => void;
 };
 
 export type EventStreamResult = {

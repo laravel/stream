@@ -84,8 +84,10 @@ export const createEventStream = (
         onMessage(event);
     };
 
-    const handleError = (e: Event) => {
-        onError(e);
+    const handleError = (e: Event | Error) => {
+        const error =
+            e instanceof Error ? e : new Error(e.type ? `EventSource ${e.type}` : "EventSource error");
+        onError(error);
         closeConnection();
     };
 
