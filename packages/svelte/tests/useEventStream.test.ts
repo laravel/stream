@@ -76,7 +76,9 @@ describe("useEventStream", () => {
 
     it("can close the stream manually", async () => {
         const onCompleteMock = vi.fn();
-        const result = useEventStream("/stream", { onComplete: onCompleteMock });
+        const result = useEventStream("/stream", {
+            onComplete: onCompleteMock,
+        });
         await Promise.resolve();
 
         result.close();
@@ -120,7 +122,9 @@ describe("useEventStream", () => {
 
     it("handles end signal correctly", async () => {
         const onCompleteMock = vi.fn();
-        const result = useEventStream("/stream", { onComplete: onCompleteMock });
+        const result = useEventStream("/stream", {
+            onComplete: onCompleteMock,
+        });
         await Promise.resolve();
 
         const eventHandler = mocks.addEventListener.mock.calls[0][1];
@@ -165,7 +169,9 @@ describe("useEventStream", () => {
     });
 
     it("receives messages from multiple event names when eventName is array", async () => {
-        const result = useEventStream("/stream", { eventName: ["update", "create"] });
+        const result = useEventStream("/stream", {
+            eventName: ["update", "create"],
+        });
         await Promise.resolve();
 
         const updateHandler = mocks.addEventListener.mock.calls[0][1];
@@ -177,7 +183,10 @@ describe("useEventStream", () => {
 
         createHandler({ data: "from-create" } as MessageEvent);
         expect(state(result).message).toBe("from-update from-create");
-        expect(state(result).messageParts).toEqual(["from-update", "from-create"]);
+        expect(state(result).messageParts).toEqual([
+            "from-update",
+            "from-create",
+        ]);
     });
 
     it("onMessage callback is called with incoming messages", async () => {

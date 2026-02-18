@@ -12,8 +12,9 @@ import {
 } from "vitest";
 import { useJsonStream, useStream } from "../src/useStream.svelte";
 
-const state = (stream: { subscribe: (run: (v: unknown) => void) => () => void }) =>
-    get(stream);
+const state = (stream: {
+    subscribe: (run: (v: unknown) => void) => () => void;
+}) => get(stream);
 
 describe("useStream", () => {
     const url = "/stream";
@@ -208,7 +209,6 @@ describe("useStream", () => {
         expect(capturedHeaders?.get("X-Custom-Header")).toBe(customHeader);
         expect(state(result).data).toBe("chunk1chunk2");
     });
-
 
     it("triggers onData callback with chunks", async () => {
         const onData = vi.fn();
