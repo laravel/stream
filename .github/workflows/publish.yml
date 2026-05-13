@@ -19,9 +19,9 @@ jobs:
               uses: actions/checkout@v4
 
             - name: Install pnpm
-              uses: pnpm/action-setup@v3
+              uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
               with:
-                  version: 10
+                version: 11.1.1
 
             - uses: actions/setup-node@v4
               with:
@@ -29,12 +29,11 @@ jobs:
                   registry-url: "https://registry.npmjs.org"
                   cache: pnpm
 
-            # Ensure npm 11.5.1 or later is installed
-            - name: Update npm
-              run: npm install -g npm@latest
+            - name: Audit dependencies
+              run: pnpm audit
 
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --frozen-lockfile
 
             - name: "Publish ${{ matrix.adapter }} to npm"
               run: cd ./packages/${{ matrix.adapter }} && pnpm run build && pnpm run release
