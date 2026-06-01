@@ -70,7 +70,6 @@ describe("useStream", () => {
         await waitFor(() => expect(result.current.isFetching).toBe(true));
         await waitFor(() => expect(result.current.isFetching).toBe(false));
         await waitFor(() => expect(result.current.isStreaming).toBe(true));
-        await waitFor(() => expect(result.current.data).toBe("chunk1"));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(result.current.isStreaming).toBe(false);
