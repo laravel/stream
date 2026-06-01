@@ -44,6 +44,11 @@ export type Stream<
  *
  * @see https://laravel.com/docs/responses#streamed-responses
  */
+const generateId = (): string =>
+    Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) =>
+        b.toString(16).padStart(2, "0"),
+    ).join("");
+
 export const useStream = <
     TSendBody extends Record<string, any> = {},
     TJsonData = null,
@@ -52,7 +57,7 @@ export const useStream = <
     options: StreamOptions<TSendBody> = {},
 ): Stream<TJsonData, TSendBody> => {
     const getUrl = typeof url === "function" ? url : () => url;
-    const id = options.id ?? crypto.randomUUID();
+    const id = options.id ?? generateId();
     const initialStream = resolveStream<TJsonData>(id);
 
     const streamStore = writable<StreamState<TJsonData>>({
