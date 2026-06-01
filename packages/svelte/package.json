@@ -64,8 +64,5 @@
     },
     "peerDependencies": {
         "svelte": "^5.0.0"
-    },
-    "dependencies": {
-        "nanoid": "^5.1.6"
     }
 }

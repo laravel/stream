@@ -1,5 +1,4 @@
 import { derived, get, writable } from "svelte/store";
-import { nanoid } from "nanoid";
 import {
     addCallbacks,
     onBeforeSend,
@@ -53,7 +52,7 @@ export const useStream = <
     options: StreamOptions<TSendBody> = {},
 ): Stream<TJsonData, TSendBody> => {
     const getUrl = typeof url === "function" ? url : () => url;
-    const id = options.id ?? nanoid();
+    const id = options.id ?? crypto.randomUUID();
     const initialStream = resolveStream<TJsonData>(id);
 
     const streamStore = writable<StreamState<TJsonData>>({

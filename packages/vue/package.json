@@ -61,8 +61,5 @@
     },
     "peerDependencies": {
         "vue": "^3.3.0"
-    },
-    "dependencies": {
-        "nanoid": "^5.1.6"
     }
 }
