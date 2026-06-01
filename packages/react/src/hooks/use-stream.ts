@@ -16,6 +16,11 @@ import {
 } from "../streams/store";
 import { StreamMeta, StreamOptions } from "../types";
 
+const generateId = (): string =>
+    Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) =>
+        b.toString(16).padStart(2, "0"),
+    ).join("");
+
 export const useStream = <
     TSendBody extends Record<string, any> = {},
     TJsonData = null,
@@ -23,7 +28,7 @@ export const useStream = <
     url: string,
     options: StreamOptions<TSendBody> = {},
 ) => {
-    const id = useRef<string>(options.id ?? crypto.randomUUID());
+    const id = useRef<string>(options.id ?? generateId());
     const stream = useRef(resolveStream<TJsonData>(id.current));
     const headers = useRef<HeadersInit>(
         (() => {
