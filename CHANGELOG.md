@@ -2,7 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.13...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.14...main)
+
+## [v0.3.14](https://github.com/laravel/stream/compare/v0.3.13...v0.3.14) - 2026-06-01
+
+### What's Changed
+
+* Bump pnpm to 11 and audit before publishing by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/26
+* Pin GitHub Actions to commit SHAs and add Dependabot config by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/25
+* Drop nanoid in favor of crypto.randomUUID by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/27
+* Fix flaky React test for initial input request by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/28
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.13...v0.3.14
 
 ## [v0.3.13](https://github.com/laravel/stream/compare/v0.3.12...v0.3.13) - 2026-02-18
 
