@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     addCallbacks,
@@ -24,7 +23,7 @@ export const useStream = <
     url: string,
     options: StreamOptions<TSendBody> = {},
 ) => {
-    const id = useRef<string>(options.id ?? nanoid());
+    const id = useRef<string>(options.id ?? crypto.randomUUID());
     const stream = useRef(resolveStream<TJsonData>(id.current));
     const headers = useRef<HeadersInit>(
         (() => {

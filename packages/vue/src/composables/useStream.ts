@@ -1,4 +1,3 @@
-import { nanoid } from "nanoid";
 import {
     MaybeRefOrGetter,
     onMounted,
@@ -43,7 +42,7 @@ export const useStream = <
     clearData: () => void;
 } => {
     const urlRef = toRef(url);
-    const id = options.id ?? nanoid();
+    const id = options.id ?? crypto.randomUUID();
     const stream = ref<StreamMeta<TJsonData>>(resolveStream<TJsonData>(id));
     const headers = (() => {
         const headers: HeadersInit = {

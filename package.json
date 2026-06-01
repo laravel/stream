@@ -30,9 +30,6 @@
     "devDependencies": {
         "prettier": "^3.8.3"
     },
-    "dependencies": {
-        "nanoid": "^5.1.11"
-    },
     "pnpm": {
         "overrides": {
             "@eslint/plugin-kit@<0.3.4": ">=0.3.4",
