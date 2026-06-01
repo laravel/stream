@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.14...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.15...main)
+
+## [v0.3.15](https://github.com/laravel/stream/compare/v0.3.14...v0.3.15) - 2026-06-01
+
+### What's Changed
+
+* Fix stream ID generation to work in non-secure contexts by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/29
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.14...v0.3.15
 
 ## [v0.3.14](https://github.com/laravel/stream/compare/v0.3.13...v0.3.14) - 2026-06-01
 
