@@ -8,6 +8,7 @@ import {
     toRef,
     watch,
 } from "vue";
+import { csrfHeaders } from "../streams/csrf";
 import {
     addCallbacks,
     onBeforeSend,
@@ -49,24 +50,11 @@ export const useStream = <
     const urlRef = toRef(url);
     const id = options.id ?? generateId();
     const stream = ref<StreamMeta<TJsonData>>(resolveStream<TJsonData>(id));
-    const headers = (() => {
-        const headers: HeadersInit = {
-            "Content-Type": "application/json",
-            "X-STREAM-ID": id,
-        };
-
-        const csrfToken =
-            options.csrfToken ??
-            document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute("content");
-
-        if (csrfToken) {
-            headers["X-CSRF-TOKEN"] = csrfToken;
-        }
-
-        return headers;
-    })();
+    const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "X-STREAM-ID": id,
+        ...csrfHeaders(options),
+    };
 
     const data = ref(stream.value.data);
     const jsonData = ref(stream.value.jsonData);

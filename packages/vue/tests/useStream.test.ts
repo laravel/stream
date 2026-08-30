@@ -305,6 +305,92 @@ describe("useStream", () => {
         expect(capturedHeaders.get("Content-Type")).toBe("application/json");
     });
 
+    it("falls back to the XSRF-TOKEN cookie when there is no meta tag", async () => {
+        document.cookie = "XSRF-TOKEN=cookie%2Dtoken%3D";
+
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const [result] = withSetup(() => useStream(url));
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders.get("X-XSRF-TOKEN")).toBe("cookie-token=");
+        expect(capturedHeaders.get("X-CSRF-TOKEN")).toBeNull();
+    });
+
+    it("prefers the meta tag over the XSRF-TOKEN cookie", async () => {
+        document.cookie = "XSRF-TOKEN=cookie-token";
+
+        const metaTag = document.createElement("meta");
+        metaTag.setAttribute("name", "csrf-token");
+        metaTag.setAttribute("content", "meta-token");
+        document.head.appendChild(metaTag);
+
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const [result] = withSetup(() => useStream(url));
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        document.head.removeChild(metaTag);
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders.get("X-CSRF-TOKEN")).toBe("meta-token");
+        expect(capturedHeaders.get("X-XSRF-TOKEN")).toBeNull();
+    });
+
+    it("honors a renamed XSRF cookie and header", async () => {
+        document.cookie = "MY-TOKEN=renamed";
+
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const [result] = withSetup(() =>
+            useStream(url, {
+                xsrfCookieName: "MY-TOKEN",
+                xsrfHeaderName: "X-MY-TOKEN",
+            }),
+        );
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(true));
+        await vi.waitFor(() => expect(result.isStreaming.value).toBe(false));
+
+        document.cookie = "MY-TOKEN=; max-age=0";
+
+        expect(capturedHeaders.get("X-MY-TOKEN")).toBe("renamed");
+        expect(capturedHeaders.get("X-XSRF-TOKEN")).toBeNull();
+    });
+
     it("generates unique ids for streams", () => {
         const [result1] = withSetup(() => useStream(url));
         const [result2] = withSetup(() => useStream(url));

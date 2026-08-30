@@ -20,6 +20,8 @@ export type StreamOptions<TSendBody extends Record<string, any> = {}> = {
     initialInput?: TSendBody;
     headers?: Record<string, string>;
     csrfToken?: string;
+    xsrfCookieName?: string;
+    xsrfHeaderName?: string;
     json?: boolean;
     credentials?: RequestCredentials;
     onResponse?: (response: Response) => void;
