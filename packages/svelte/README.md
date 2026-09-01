@@ -300,7 +300,7 @@ The `clearMessage` function may be used to clear the message content that has be
 
 The `useJsonEventStream` function allows you to POST a request body and consume the [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) that come back, parsing each event as JSON as it arrives.
 
-Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this function sends a `POST` request when you call `send` — so you may pass a body and your CSRF token along with it:
+Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this function sends a request when you call `send`, so you may pass a body and your CSRF token along with it. All requests are sent as JSON `POST` requests:
 
 ```svelte
 <script lang="ts">
@@ -312,7 +312,7 @@ Unlike `useEventStream`, which opens a GET connection as soon as your component 
 </script>
 
 {#each $stream.events as event}
-    <div>{event.step} — {event.percent}%</div>
+    <div>{event.step}: {event.percent}%</div>
 {/each}
 
 {#if $stream.isFetching}

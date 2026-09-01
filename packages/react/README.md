@@ -301,7 +301,7 @@ function App() {
 
 The `useJsonEventStream` hook allows you to POST a request body and consume the [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) that come back, parsing each event as JSON as it arrives.
 
-Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this hook sends a `POST` request when you call `send` — so you may pass a body and your CSRF token along with it:
+Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this hook sends a request when you call `send`, so you may pass a body and your CSRF token along with it. All requests are sent as JSON `POST` requests:
 
 ```tsx
 import { useJsonEventStream } from "@laravel/stream-react";
@@ -316,7 +316,7 @@ function App() {
         <div>
             {events.map((event) => (
                 <div>
-                    {event.step} — {event.percent}%
+                    {event.step}: {event.percent}%
                 </div>
             ))}
             {isFetching && <div>Connecting...</div>}

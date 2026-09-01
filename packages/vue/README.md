@@ -310,7 +310,7 @@ onMounted(() => {
 
 The `useJsonEventStream` hook allows you to POST a request body and consume the [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) that come back, parsing each event as JSON as it arrives.
 
-Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this hook sends a `POST` request when you call `send` — so you may pass a body and your CSRF token along with it:
+Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this hook sends a request when you call `send`, so you may pass a body and your CSRF token along with it. All requests are sent as JSON `POST` requests:
 
 ```vue
 <script setup lang="ts">
@@ -329,7 +329,7 @@ const startDeploy = () => {
 <template>
     <div>
         <div v-for="event in events">
-            {{ event.step }} — {{ event.percent }}%
+            {{ event.step }}: {{ event.percent }}%
         </div>
         <div v-if="isFetching">Connecting...</div>
         <div v-if="isStreaming">Deploying...</div>
