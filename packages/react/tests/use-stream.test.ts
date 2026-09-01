@@ -402,6 +402,66 @@ describe("useStream", () => {
         expect(capturedHeaders.get("Content-Type")).toBe("application/json");
     });
 
+    it("should fall back to the XSRF-TOKEN cookie when there is no meta tag", async () => {
+        document.cookie = "XSRF-TOKEN=cookie%2Dtoken%3D";
+
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const { result } = renderHook(() => useStream(url));
+
+        await act(() => {
+            result.current.send({ test: "data" });
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders.get("X-XSRF-TOKEN")).toBe("cookie-token=");
+        expect(capturedHeaders.get("X-CSRF-TOKEN")).toBeNull();
+    });
+
+    it("should prefer the meta tag over the XSRF-TOKEN cookie", async () => {
+        document.cookie = "XSRF-TOKEN=cookie-token";
+
+        const metaTag = document.createElement("meta");
+        metaTag.setAttribute("name", "csrf-token");
+        metaTag.setAttribute("content", "meta-token");
+        document.head.appendChild(metaTag);
+
+        let capturedHeaders: any;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const { result } = renderHook(() => useStream(url));
+
+        await act(() => {
+            result.current.send({ test: "data" });
+        });
+
+        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(result.current.isStreaming).toBe(false));
+
+        document.head.removeChild(metaTag);
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders.get("X-CSRF-TOKEN")).toBe("meta-token");
+        expect(capturedHeaders.get("X-XSRF-TOKEN")).toBeNull();
+    });
+
     it("will generate unique ids for streams", async () => {
         const { result } = renderHook(() => useStream(url));
         const { result: result2 } = renderHook(() => useStream(url));

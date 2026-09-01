@@ -210,6 +210,64 @@ describe("useStream", () => {
         expect(state(result).data).toBe("chunk1chunk2");
     });
 
+    it("falls back to the XSRF-TOKEN cookie when there is no meta tag", async () => {
+        document.cookie = "XSRF-TOKEN=cookie%2Dtoken%3D";
+
+        let capturedHeaders: Headers | undefined;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const result = useStream(url);
+        await Promise.resolve();
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders?.get("X-XSRF-TOKEN")).toBe("cookie-token=");
+        expect(capturedHeaders?.get("X-CSRF-TOKEN")).toBeNull();
+    });
+
+    it("prefers the meta tag over the XSRF-TOKEN cookie", async () => {
+        document.cookie = "XSRF-TOKEN=cookie-token";
+
+        const metaTag = document.createElement("meta");
+        metaTag.setAttribute("name", "csrf-token");
+        metaTag.setAttribute("content", "meta-token");
+        document.head.appendChild(metaTag);
+
+        let capturedHeaders: Headers | undefined;
+
+        server.use(
+            http.post(url, async ({ request }) => {
+                capturedHeaders = request.headers;
+                return response();
+            }),
+        );
+
+        const result = useStream(url);
+        await Promise.resolve();
+
+        result.send({ test: "data" });
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        document.head.removeChild(metaTag);
+        document.cookie = "XSRF-TOKEN=; max-age=0";
+
+        expect(capturedHeaders?.get("X-CSRF-TOKEN")).toBe("meta-token");
+        expect(capturedHeaders?.get("X-XSRF-TOKEN")).toBeNull();
+    });
+
     it("triggers onData callback with chunks", async () => {
         const onData = vi.fn();
 
