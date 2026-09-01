@@ -296,6 +296,133 @@ The `clearMessage` function may be used to clear the message content that has be
 <div>{$eventStream.message}</div>
 ```
 
+## JSON Event Streams
+
+The `useJsonEventStream` function allows you to POST a request body and consume the [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) that come back, parsing each event as JSON as it arrives.
+
+Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this function sends a `POST` request when you call `send` — so you may pass a body and your CSRF token along with it:
+
+```svelte
+<script lang="ts">
+    import { useJsonEventStream } from "@laravel/stream-svelte";
+
+    type Deployment = { step: string; percent: number };
+
+    const stream = useJsonEventStream<Deployment>("/deploy");
+</script>
+
+{#each $stream.events as event}
+    <div>{event.step} — {event.percent}%</div>
+{/each}
+
+{#if $stream.isFetching}
+    <div>Connecting...</div>
+{/if}
+
+{#if $stream.isStreaming}
+    <div>Deploying...</div>
+{/if}
+
+<button onclick={() => stream.send({ environment: "production" })}>
+    Deploy
+</button>
+```
+
+Each event is passed to the `onEvent` callback as it is received, so you may fold it into your own state instead of using the `events` array:
+
+```svelte
+<script lang="ts">
+    import { useJsonEventStream } from "@laravel/stream-svelte";
+
+    let percent = $state(0);
+
+    const stream = useJsonEventStream<Deployment>("/deploy", {
+        onEvent: (event) => (percent = event.percent),
+    });
+</script>
+
+<div>{percent}%</div>
+```
+
+The second argument given to `useJsonEventStream` is an options object that you may use to customize the stream consumption behavior:
+
+```ts
+type JsonEventStreamOptions = {
+    initialInput?: Record<string, any>;
+    headers?: Record<string, string>;
+    csrfToken?: string;
+    xsrfCookieName?: string;
+    xsrfHeaderName?: string;
+    credentials?: RequestCredentials;
+    eventName?: string | string[];
+    endSignal?: string;
+    onEvent?: (event: TEvent) => void;
+    onResponse?: (response: Response) => void;
+    onParseError?: (error: Error, data: string) => void;
+    onCancel?: () => void;
+    onFinish?: () => void;
+    onError?: (error: Error) => void;
+    onBeforeSend?: (request: RequestInit) => boolean | RequestInit | void;
+};
+```
+
+`eventName` limits the events you receive to those sent under the given name. By default every event is received, including those your server sends without a name.
+
+`endSignal` is the event data that ends the stream, matching the `</stream>` that Laravel's `eventStream` method sends by default.
+
+`onParseError` is called when an event arrives that is not valid JSON. The event is skipped and the stream continues.
+
+`onError` is called when the request fails. A response that never became a stream is passed to the callback as a `StreamResponseError`, which carries the `status` and the raw `body` so you may read your server's error:
+
+```svelte
+<script lang="ts">
+    import {
+        StreamResponseError,
+        useJsonEventStream,
+    } from "@laravel/stream-svelte";
+
+    const stream = useJsonEventStream("/deploy", {
+        onError: (error) => {
+            if (error instanceof StreamResponseError && error.status === 422) {
+                const { errors } = JSON.parse(error.body);
+            }
+        },
+    });
+</script>
+```
+
+You may cancel an in-flight stream using the returned `cancel` function, and the `clearEvents` function may be used to clear the events that have been received so far:
+
+```svelte
+<script lang="ts">
+    import { useJsonEventStream } from "@laravel/stream-svelte";
+
+    const stream = useJsonEventStream("/deploy");
+</script>
+
+<button onclick={() => stream.cancel()}>Cancel</button>
+<button onclick={() => stream.clearEvents()}>Clear</button>
+```
+
+### Streaming Without State
+
+If you are folding events into state you already own, the `streamJsonEvents` function does the same work without any of the store's reactivity:
+
+```ts
+import { streamJsonEvents } from "@laravel/stream-svelte";
+
+const controller = new AbortController();
+
+await streamJsonEvents<Deployment>({
+    url: "/deploy",
+    body: { environment: "production" },
+    signal: controller.signal,
+    onEvent: (event) => {
+        //
+    },
+});
+```
+
 ## License
 
 Laravel Stream is open-sourced software licensed under the [MIT license](LICENSE.md).

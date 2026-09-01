@@ -17,6 +17,39 @@ export type EventStreamResult = {
     clearMessage: () => void;
 };
 
+export type JsonEventStreamOptions<
+    TEvent = unknown,
+    TSendBody extends Record<string, any> = {},
+> = {
+    headers?: Record<string, string>;
+    csrfToken?: string;
+    xsrfCookieName?: string;
+    xsrfHeaderName?: string;
+    credentials?: RequestCredentials;
+    eventName?: string | string[];
+    endSignal?: string;
+    initialInput?: TSendBody;
+    onEvent?: (event: TEvent) => void;
+    onResponse?: (response: Response) => void;
+    onParseError?: (error: Error, data: string) => void;
+    onCancel?: () => void;
+    onFinish?: () => void;
+    onError?: (error: Error) => void;
+    onBeforeSend?: (request: RequestInit) => boolean | RequestInit | void;
+};
+
+export type JsonEventStreamResult<
+    TEvent = unknown,
+    TSendBody extends Record<string, any> = {},
+> = {
+    events: Readonly<Ref<readonly TEvent[]>>;
+    isFetching: Readonly<Ref<boolean>>;
+    isStreaming: Readonly<Ref<boolean>>;
+    send: (body?: TSendBody) => Promise<void>;
+    cancel: () => void;
+    clearEvents: () => void;
+};
+
 export type StreamOptions<TSendBody extends Record<string, any> = {}> = {
     id?: string;
     initialInput?: TSendBody;
