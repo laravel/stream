@@ -297,6 +297,128 @@ function App() {
 }
 ```
 
+## JSON Event Streams
+
+The `useJsonEventStream` hook allows you to POST a request body and consume the [Server-Sent Events (SSE)](https://laravel.com/docs/responses#event-streams) that come back, parsing each event as JSON as it arrives.
+
+Unlike `useEventStream`, which opens a GET connection as soon as your component mounts, this hook sends a request when you call `send`, so you may pass a body and your CSRF token along with it. All requests are sent as JSON `POST` requests:
+
+```tsx
+import { useJsonEventStream } from "@laravel/stream-react";
+
+type Deployment = { step: string; percent: number };
+
+function App() {
+    const { events, isFetching, isStreaming, send } =
+        useJsonEventStream<Deployment>("/deploy");
+
+    return (
+        <div>
+            {events.map((event) => (
+                <div>
+                    {event.step}: {event.percent}%
+                </div>
+            ))}
+            {isFetching && <div>Connecting...</div>}
+            {isStreaming && <div>Deploying...</div>}
+            <button onClick={() => send({ environment: "production" })}>
+                Deploy
+            </button>
+        </div>
+    );
+}
+```
+
+Each event is passed to the `onEvent` callback as it is received, so you may fold it into your own state instead of using the `events` array:
+
+```tsx
+import { useJsonEventStream } from "@laravel/stream-react";
+import { useState } from "react";
+
+function App() {
+    const [percent, setPercent] = useState(0);
+
+    const { send } = useJsonEventStream<Deployment>("/deploy", {
+        onEvent: (event) => setPercent(event.percent),
+    });
+
+    return <div>{percent}%</div>;
+}
+```
+
+The second argument given to `useJsonEventStream` is an options object that you may use to customize the stream consumption behavior:
+
+```ts
+type JsonEventStreamOptions = {
+    initialInput?: Record<string, any>;
+    headers?: Record<string, string>;
+    csrfToken?: string;
+    xsrfCookieName?: string;
+    xsrfHeaderName?: string;
+    credentials?: RequestCredentials;
+    eventName?: string | string[];
+    endSignal?: string;
+    onEvent?: (event: TEvent) => void;
+    onResponse?: (response: Response) => void;
+    onParseError?: (error: Error, data: string) => void;
+    onCancel?: () => void;
+    onFinish?: () => void;
+    onError?: (error: Error) => void;
+    onBeforeSend?: (request: RequestInit) => boolean | RequestInit | void;
+};
+```
+
+`eventName` limits the events you receive to those sent under the given name. By default every event is received, including those your server sends without a name.
+
+`endSignal` is the event data that ends the stream, matching the `</stream>` that Laravel's `eventStream` method sends by default.
+
+`onParseError` is called when an event arrives that is not valid JSON. The event is skipped and the stream continues.
+
+`onError` is called when the request fails. A response that never became a stream is passed to the callback as a `StreamResponseError`, which carries the `status` and the raw `body` so you may read your server's error:
+
+```tsx
+import { StreamResponseError, useJsonEventStream } from "@laravel/stream-react";
+
+function App() {
+    const { send } = useJsonEventStream("/deploy", {
+        onError: (error) => {
+            if (error instanceof StreamResponseError && error.status === 422) {
+                const { errors } = JSON.parse(error.body);
+            }
+        },
+    });
+}
+```
+
+You may cancel an in-flight stream using the returned `cancel` function, and the `clearEvents` function may be used to clear the events that have been received so far:
+
+```tsx
+import { useJsonEventStream } from "@laravel/stream-react";
+
+function App() {
+    const { events, cancel, clearEvents } = useJsonEventStream("/deploy");
+}
+```
+
+### Streaming Without State
+
+If you are folding events into state you already own, the `streamJsonEvents` function does the same work without any of the hook's state:
+
+```ts
+import { streamJsonEvents } from "@laravel/stream-react";
+
+const controller = new AbortController();
+
+await streamJsonEvents<Deployment>({
+    url: "/deploy",
+    body: { environment: "production" },
+    signal: controller.signal,
+    onEvent: (event) => {
+        //
+    },
+});
+```
+
 ## License
 
 Laravel Stream is open-sourced software licensed under the [MIT license](LICENSE.md).
