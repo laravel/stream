@@ -50,6 +50,24 @@ describe("useStream", () => {
     });
     afterAll(() => server.close());
 
+    // Mid-stream values can vanish between waitFor's polls, so record every render and query that history instead.
+    const renderStream = <T extends Record<string, any>>(hook: () => T) => {
+        const history: T[] = [];
+
+        const rendered = renderHook(() => {
+            const stream = hook();
+            history.push(stream);
+
+            return stream;
+        });
+
+        return {
+            ...rendered,
+            saw: <K extends keyof T>(key: K, value: T[K]) =>
+                history.some((render) => render[key] === value),
+        };
+    };
+
     it("should initialize with default values", () => {
         const { result } = renderHook(() => useStream(url));
 
@@ -63,13 +81,12 @@ describe("useStream", () => {
     it("should make a request with initial input", async () => {
         const initialInput = { test: "data" };
 
-        const { result } = await act(async () => {
-            return renderHook(() => useStream(url, { initialInput }));
+        const { result, saw } = await act(async () => {
+            return renderStream(() => useStream(url, { initialInput }));
         });
 
-        await waitFor(() => expect(result.current.isFetching).toBe(true));
-        await waitFor(() => expect(result.current.isFetching).toBe(false));
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isFetching", true)).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(result.current.isStreaming).toBe(false);
@@ -94,13 +111,15 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url, { onCancel }));
+        const { result, saw } = renderStream(() =>
+            useStream(url, { onCancel }),
+        );
 
         act(() => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(capturedBody).toEqual(payload);
@@ -113,7 +132,7 @@ describe("useStream", () => {
         const payload = { test: "data" };
         const onResponse = vi.fn();
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, {
                 onResponse,
             }),
@@ -123,7 +142,7 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onResponse).toHaveBeenCalled();
@@ -133,7 +152,7 @@ describe("useStream", () => {
         const payload = { test: "data" };
         const onFinish = vi.fn();
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, {
                 onFinish,
             }),
@@ -143,7 +162,7 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onFinish).toHaveBeenCalled();
@@ -153,7 +172,7 @@ describe("useStream", () => {
         const payload = { test: "data" };
         const onBeforeSend = vi.fn();
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, {
                 onBeforeSend,
             }),
@@ -163,7 +182,7 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onBeforeSend).toHaveBeenCalled();
@@ -210,7 +229,7 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, {
                 onBeforeSend,
             }),
@@ -220,7 +239,7 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onBeforeSend).toHaveBeenCalled();
@@ -231,7 +250,7 @@ describe("useStream", () => {
         const payload = { test: "data" };
         const onData = vi.fn();
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, {
                 onData,
             }),
@@ -241,7 +260,7 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onData).toHaveBeenCalledWith("chunk1");
@@ -263,7 +282,7 @@ describe("useStream", () => {
 
         const onError = vi.fn();
         const onFinish = vi.fn();
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, { onError, onFinish }),
         );
 
@@ -271,7 +290,7 @@ describe("useStream", () => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isFetching).toBe(true));
+        await waitFor(() => expect(saw("isFetching", true)).toBe(true));
         await waitFor(() => expect(result.current.isFetching).toBe(false));
 
         expect(onError).toHaveBeenCalledWith(new Error(errorMessage));
@@ -305,6 +324,31 @@ describe("useStream", () => {
 
     it("should stop streaming when stop is called", async () => {
         const onCancel = vi.fn();
+
+        server.use(
+            http.post(url, async () => {
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            await delay(20);
+                            controller.enqueue(
+                                new TextEncoder().encode("chunk1"),
+                            );
+
+                            // Never settles, so the stream cannot finish before cancel() lands.
+                            await new Promise<void>(() => {});
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "text/event-stream",
+                        },
+                    },
+                );
+            }),
+        );
+
         const { result } = renderHook(() => useStream(url, { onCancel }));
 
         act(() => {
@@ -333,7 +377,7 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, { headers: customHeaders }),
         );
 
@@ -341,7 +385,7 @@ describe("useStream", () => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
         expect(capturedHeaders.get("X-Custom-Header")).toBe(
             customHeaders["X-Custom-Header"],
@@ -364,13 +408,13 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url));
+        const { result, saw } = renderStream(() => useStream(url));
 
         await act(() => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         document.head.removeChild(metaTag);
@@ -389,13 +433,15 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url, { csrfToken }));
+        const { result, saw } = renderStream(() =>
+            useStream(url, { csrfToken }),
+        );
 
         await act(() => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(capturedHeaders.get("X-CSRF-TOKEN")).toBe(csrfToken);
@@ -414,13 +460,13 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url));
+        const { result, saw } = renderStream(() => useStream(url));
 
         await act(() => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         document.cookie = "XSRF-TOKEN=; max-age=0";
@@ -446,13 +492,13 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url));
+        const { result, saw } = renderStream(() => useStream(url));
 
         await act(() => {
             result.current.send({ test: "data" });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         document.head.removeChild(metaTag);
@@ -484,8 +530,8 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url, { id }));
-        const { result: result2 } = renderHook(() =>
+        const { result, saw } = renderStream(() => useStream(url, { id }));
+        const { result: result2, saw: saw2 } = renderStream(() =>
             useStream(url, { id, onFinish }),
         );
 
@@ -493,17 +539,15 @@ describe("useStream", () => {
             result.current.send(payload);
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
-        await waitFor(() => expect(result2.current.isStreaming).toBe(true));
-        await waitFor(() => expect(result.current.data).toBe("chunk1"));
-        await waitFor(() => expect(result2.current.data).toBe("chunk1"));
         await waitFor(() => expect(result.current.data).toBe("chunk1chunk2"));
         await waitFor(() => expect(result2.current.data).toBe("chunk1chunk2"));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
         await waitFor(() => expect(result2.current.isStreaming).toBe(false));
 
-        expect(result.current.isStreaming).toBe(false);
-        expect(result2.current.isStreaming).toBe(false);
+        expect(saw("isStreaming", true)).toBe(true);
+        expect(saw2("isStreaming", true)).toBe(true);
+        expect(saw("data", "chunk1")).toBe(true);
+        expect(saw2("data", "chunk1")).toBe(true);
 
         expect(result.current.data).toBe("chunk1chunk2");
         expect(result2.current.data).toBe("chunk1chunk2");
@@ -515,7 +559,7 @@ describe("useStream", () => {
 
     it.skip("should cancel stream when component unmounts", async () => {
         const onCancel = vi.fn();
-        const { unmount, result } = renderHook(() =>
+        const { unmount, result, saw } = renderStream(() =>
             useStream(url, { onCancel }),
         );
 
@@ -525,7 +569,7 @@ describe("useStream", () => {
             });
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
 
         unmount();
 
@@ -565,13 +609,15 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useStream(url, { json: true }));
+        const { result, saw } = renderStream(() =>
+            useStream(url, { json: true }),
+        );
 
         await act(() => {
             result.current.send({});
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(result.current.data).toEqual(JSON.stringify(jsonData));
@@ -604,7 +650,7 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() =>
+        const { result, saw } = renderStream(() =>
             useStream(url, { json: true, onError }),
         );
 
@@ -612,7 +658,7 @@ describe("useStream", () => {
             result.current.send({});
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onError).toHaveBeenCalled();
@@ -652,13 +698,13 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useJsonStream(url));
+        const { result, saw } = renderStream(() => useJsonStream(url));
 
         await act(() => {
             result.current.send({});
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(result.current.data).toEqual(jsonData);
@@ -691,13 +737,15 @@ describe("useStream", () => {
             }),
         );
 
-        const { result } = renderHook(() => useJsonStream(url, { onError }));
+        const { result, saw } = renderStream(() =>
+            useJsonStream(url, { onError }),
+        );
 
         await act(() => {
             result.current.send({});
         });
 
-        await waitFor(() => expect(result.current.isStreaming).toBe(true));
+        await waitFor(() => expect(saw("isStreaming", true)).toBe(true));
         await waitFor(() => expect(result.current.isStreaming).toBe(false));
 
         expect(onError).toHaveBeenCalled();
