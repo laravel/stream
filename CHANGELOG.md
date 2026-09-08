@@ -2,7 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.15...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.16...main)
+
+## [v0.3.16](https://github.com/laravel/stream/compare/v0.3.15...v0.3.16) - 2026-09-08
+
+### What's Changed
+
+* GitHub Actions hardening by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/stream/pull/30
+* Bump vitest from 4.0.18 to 4.1.0 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/32
+* Bump svelte from 5.51.4 to 5.55.7 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/31
+* Bump vite from 7.3.1 to 7.3.2 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/33
+* Add Dependabot cooldown of 5 days by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/stream/pull/34
+* Enable Dependabot auto-merge by [@nunomaduro](https://github.com/nunomaduro) in https://github.com/laravel/stream/pull/35
+* Bump actions/checkout from 6.0.2 to 6.0.3 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/36
+* Bump esbuild from 0.27.3 to 0.28.1 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/37
+* Bump vite from 7.3.2 to 7.3.5 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/39
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/40
+* Bump stefanzweifel/git-auto-commit-action from 7.1.0 to 7.2.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/41
+* Bump the github-actions group with 2 updates by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/42
+* Bump pnpm/action-setup from 6.0.9 to 6.0.10 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/43
+* Fall back to the XSRF-TOKEN cookie when resolving CSRF by [@pascalbaljet](https://github.com/pascalbaljet) in https://github.com/laravel/stream/pull/44
+* Add `useJsonEventStream` hook by [@pascalbaljet](https://github.com/pascalbaljet) in https://github.com/laravel/stream/pull/45
+* Fix flaky tests by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/47
+* Bump publish workflow Node version from 20 to 22 by [@dpletiko](https://github.com/dpletiko) in https://github.com/laravel/stream/pull/48
+
+### New Contributors
+
+* [@nunomaduro](https://github.com/nunomaduro) made their first contribution in https://github.com/laravel/stream/pull/30
+* [@dependabot](https://github.com/dependabot)[bot] made their first contribution in https://github.com/laravel/stream/pull/32
+* [@pascalbaljet](https://github.com/pascalbaljet) made their first contribution in https://github.com/laravel/stream/pull/44
+* [@dpletiko](https://github.com/dpletiko) made their first contribution in https://github.com/laravel/stream/pull/48
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.15...v0.3.16
 
 ## [v0.3.15](https://github.com/laravel/stream/compare/v0.3.14...v0.3.15) - 2026-06-01
 
