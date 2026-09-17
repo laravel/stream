@@ -5,6 +5,7 @@ export {
     type JsonEventStreamState,
 } from "./useJsonEventStream.svelte";
 export { csrfHeaders, type CsrfHeaderOptions } from "./streams/csrf";
+export { type StreamFrame } from "./streams/events";
 export {
     streamJsonEvents,
     StreamResponseError,

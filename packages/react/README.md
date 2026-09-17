@@ -402,7 +402,7 @@ function App() {
 
 ### Streaming Without State
 
-If you are folding events into state you already own, the `streamJsonEvents` function does the same work without any of the hook's state:
+If you are folding events into state you already own, the `streamJsonEvents` function does the same work without any of the hook's state. Each event arrives with the frame that carried it, holding the event name, the SSE id and the raw data:
 
 ```ts
 import { streamJsonEvents } from "@laravel/stream-react";
@@ -413,7 +413,7 @@ await streamJsonEvents<Deployment>({
     url: "/deploy",
     body: { environment: "production" },
     signal: controller.signal,
-    onEvent: (event) => {
+    onEvent: (event, frame) => {
         //
     },
 });

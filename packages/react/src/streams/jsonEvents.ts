@@ -1,5 +1,5 @@
 import { csrfHeaders } from "./csrf";
-import { readEventStream } from "./events";
+import { readEventStream, type StreamFrame } from "./events";
 
 export class StreamResponseError extends Error {
     constructor(
@@ -32,7 +32,7 @@ export type JsonEventStreamRequest<
     credentials?: RequestCredentials;
     eventName?: string | string[];
     endSignal?: string;
-    onEvent: (event: TEvent) => void;
+    onEvent: (event: TEvent, frame: StreamFrame) => void;
     onSend?: () => void;
     onResponse?: (response: Response) => void;
     onParseError?: (error: Error, data: string) => void;
@@ -148,7 +148,7 @@ export const streamJsonEvents = async <
 
         // Outside the try, so a throw from the caller is not mistaken for
         // a malformed frame.
-        onEvent(event);
+        onEvent(event, frame);
 
         return true;
     });

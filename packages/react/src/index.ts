@@ -1,6 +1,7 @@
 export { useEventStream } from "./hooks/use-event-stream";
 export { useJsonEventStream } from "./hooks/use-json-event-stream";
 export { csrfHeaders, type CsrfHeaderOptions } from "./streams/csrf";
+export { type StreamFrame } from "./streams/events";
 export {
     streamJsonEvents,
     StreamResponseError,
