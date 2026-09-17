@@ -23,6 +23,7 @@ export type JsonEventStreamRequest<
     TSendBody extends Record<string, any> = {},
 > = {
     url: string;
+    method?: string;
     body?: TSendBody;
     signal: AbortSignal;
     headers?: Record<string, string>;
@@ -56,6 +57,7 @@ export const streamJsonEvents = async <
     TSendBody extends Record<string, any> = {},
 >({
     url,
+    method = "POST",
     body,
     signal,
     headers,
@@ -71,17 +73,19 @@ export const streamJsonEvents = async <
     onParseError,
     onBeforeSend,
 }: JsonEventStreamRequest<TEvent, TSendBody>): Promise<boolean> => {
+    const carriesBody = !["GET", "HEAD"].includes(method.toUpperCase());
+
     const request: RequestInit = {
-        method: "POST",
+        method,
         signal,
         credentials: credentials ?? "same-origin",
         headers: {
-            "Content-Type": "application/json",
+            ...(carriesBody ? { "Content-Type": "application/json" } : {}),
             Accept: "text/event-stream",
             ...csrfHeaders({ csrfToken, xsrfCookieName, xsrfHeaderName }),
             ...(headers ?? {}),
         },
-        body: JSON.stringify(body ?? {}),
+        ...(carriesBody ? { body: JSON.stringify(body ?? {}) } : {}),
     };
 
     const modified = onBeforeSend?.(request);

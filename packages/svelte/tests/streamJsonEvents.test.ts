@@ -294,4 +294,59 @@ describe("streamJsonEvents", () => {
             }),
         ).rejects.toThrow("caller exploded");
     });
+
+    it("reads a stream from a GET, sending no body", async () => {
+        const seen: TestEvent[] = [];
+        let sent: { method: string; type: string | null; body: string } | null =
+            null;
+
+        server.use(
+            http.get(url, async ({ request }) => {
+                sent = {
+                    method: request.method,
+                    type: request.headers.get("Content-Type"),
+                    body: await request.text(),
+                };
+
+                return streamOf(['data: {"type":"one"}\n\n']);
+            }),
+        );
+
+        await streamJsonEvents<TestEvent>({
+            url,
+            method: "GET",
+            signal: new AbortController().signal,
+            onEvent: (event) => seen.push(event),
+        });
+
+        // fetch throws on a GET carrying a body, so the type that describes
+        // one has nothing to describe either.
+        expect(sent).toEqual({ method: "GET", type: null, body: "" });
+        expect(seen).toEqual([{ type: "one" }]);
+    });
+
+    it("still sends the body on a method that takes one", async () => {
+        let sent: { method: string; body: string } | null = null;
+
+        server.use(
+            http.put(url, async ({ request }) => {
+                sent = { method: request.method, body: await request.text() };
+
+                return streamOf(['data: {"type":"one"}\n\n']);
+            }),
+        );
+
+        await streamJsonEvents<TestEvent>({
+            url,
+            method: "PUT",
+            body: { message: "Hello" },
+            signal: new AbortController().signal,
+            onEvent: () => {},
+        });
+
+        expect(sent).toEqual({
+            method: "PUT",
+            body: JSON.stringify({ message: "Hello" }),
+        });
+    });
 });
