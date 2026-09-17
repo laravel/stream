@@ -9,6 +9,7 @@ import {
     it,
     vi,
 } from "vitest";
+import type { StreamFrame } from "../src/streams/events";
 import {
     StreamResponseError,
     streamJsonEvents,
@@ -62,6 +63,34 @@ describe("streamJsonEvents", () => {
 
         expect(sent).toBe(true);
         expect(seen).toEqual([{ type: "one" }, { type: "two" }]);
+    });
+
+    it("hands the frame alongside the event", async () => {
+        const seen: StreamFrame[] = [];
+
+        server.use(
+            http.post(url, () =>
+                streamOf([
+                    'id: 1\nevent: tick\ndata: {"type":"one"}\n\n',
+                    'data: {"type":"two"}\n\n',
+                    "data: </stream>\n\n",
+                ]),
+            ),
+        );
+
+        await streamJsonEvents<TestEvent>({
+            url,
+            body: { message: "Hello" },
+            signal: new AbortController().signal,
+            onEvent: (_event, frame) => seen.push(frame),
+        });
+
+        // The id belongs to the stream rather than the frame, so it holds
+        // its value for the frame that sets no id of its own.
+        expect(seen).toEqual([
+            { event: "tick", id: "1", data: '{"type":"one"}' },
+            { event: null, id: "1", data: '{"type":"two"}' },
+        ]);
     });
 
     it("resolves false when onBeforeSend refuses the request", async () => {
