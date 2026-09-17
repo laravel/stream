@@ -423,6 +423,19 @@ await streamJsonEvents<Deployment>({
 });
 ```
 
+The request is sent as a `POST`. You may pass a `method` to send any other:
+
+```ts
+await streamJsonEvents<Deployment>({
+    url: "/deploy/status",
+    method: "GET",
+    signal: controller.signal,
+    onEvent: (event) => {
+        //
+    },
+});
+```
+
 ## License
 
 Laravel Stream is open-sourced software licensed under the [MIT license](LICENSE.md).
