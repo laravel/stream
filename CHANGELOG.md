@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.18...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.19...main)
+
+## [v0.3.19](https://github.com/laravel/stream/compare/v0.3.18...v0.3.19) - 2026-09-18
+
+### What's Changed
+
+* Fixed pnpm audit by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/56
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.18...v0.3.19
 
 ## [v0.3.18](https://github.com/laravel/stream/compare/v0.3.17...v0.3.18) - 2026-09-18
 
