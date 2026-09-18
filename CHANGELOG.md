@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased](https://github.com/laravel/stream/compare/v0.3.17...main)
+## [Unreleased](https://github.com/laravel/stream/compare/v0.3.18...main)
+
+## [v0.3.18](https://github.com/laravel/stream/compare/v0.3.17...v0.3.18) - 2026-09-18
+
+### What's Changed
+
+* Add `pnpm audit` to test workflow by [@joetannenbaum](https://github.com/joetannenbaum) in https://github.com/laravel/stream/pull/50
+* Bump vitest from 4.1.0 to 4.1.11 by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/51
+* Bump pnpm/action-setup from 6.0.10 to 6.1.0 in the github-actions group by [@dependabot](https://github.com/dependabot)[bot] in https://github.com/laravel/stream/pull/52
+* Pass the frame to `onEvent` by [@pascalbaljet](https://github.com/pascalbaljet) in https://github.com/laravel/stream/pull/54
+* Support any request method in `streamJsonEvents` by [@pascalbaljet](https://github.com/pascalbaljet) in https://github.com/laravel/stream/pull/53
+
+**Full Changelog**: https://github.com/laravel/stream/compare/v0.3.17...v0.3.18
 
 ## [v0.3.17](https://github.com/laravel/stream/compare/v0.3.16...v0.3.17) - 2026-09-08
 
