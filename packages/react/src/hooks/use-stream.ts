@@ -142,9 +142,14 @@ export const useStream = <
         (
             reader: ReadableStreamDefaultReader<AllowSharedBufferSource>,
             str = "",
+            decoder = new TextDecoder("utf-8"),
         ): Promise<string> => {
             return reader.read().then(({ done, value }) => {
-                const incomingStr = new TextDecoder("utf-8").decode(value);
+                // One decoder per response, in streaming mode, so a multi-byte
+                // character split across chunks is held until it's complete.
+                const incomingStr = done
+                    ? decoder.decode()
+                    : decoder.decode(value, { stream: true });
                 const newData = str + incomingStr;
 
                 onData(id.current, incomingStr);
@@ -156,7 +161,7 @@ export const useStream = <
                 if (!done) {
                     updateStream(streamParams);
 
-                    return read(reader, newData);
+                    return read(reader, newData, decoder);
                 }
 
                 streamParams.isStreaming = false;

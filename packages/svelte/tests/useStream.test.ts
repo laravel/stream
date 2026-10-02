@@ -282,6 +282,87 @@ describe("useStream", () => {
         expect(onData).toHaveBeenCalledWith("chunk2");
     });
 
+    it("decodes multi-byte characters split across chunks", async () => {
+        const text = "It’s €250,000 — café";
+        const bytes = new TextEncoder().encode(text);
+
+        server.use(
+            http.post(url, async () => {
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            // Two bytes at a time, so every multi-byte character is split across chunks.
+                            for (let i = 0; i < bytes.length; i += 2) {
+                                await delay(5);
+                                controller.enqueue(bytes.slice(i, i + 2));
+                            }
+
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "text/plain; charset=utf-8",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const onData = vi.fn();
+
+        const result = useStream(url, { onData });
+
+        result.send({});
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        expect(state(result).data).toBe(text);
+        expect(onData.mock.calls.map(([chunk]) => chunk).join("")).toBe(text);
+    });
+
+    it("parses JSON with multi-byte characters split across chunks", async () => {
+        const text = JSON.stringify({ message: "It’s €250,000 — café" });
+        const bytes = new TextEncoder().encode(text);
+
+        server.use(
+            http.post(url, async () => {
+                return new HttpResponse(
+                    new ReadableStream({
+                        async start(controller) {
+                            // Two bytes at a time, so every multi-byte character is split across chunks.
+                            for (let i = 0; i < bytes.length; i += 2) {
+                                await delay(5);
+                                controller.enqueue(bytes.slice(i, i + 2));
+                            }
+
+                            controller.close();
+                        },
+                    }),
+                    {
+                        status: 200,
+                        headers: {
+                            "Content-Type": "text/plain; charset=utf-8",
+                        },
+                    },
+                );
+            }),
+        );
+
+        const result = useStream(url, { json: true });
+
+        result.send({});
+
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(true));
+        await vi.waitFor(() => expect(state(result).isStreaming).toBe(false));
+
+        expect(state(result).jsonData).toEqual({
+            message: "It’s €250,000 — café",
+        });
+    });
+
     it("handles errors correctly", async () => {
         const errorMessage = "Server error";
         server.use(
